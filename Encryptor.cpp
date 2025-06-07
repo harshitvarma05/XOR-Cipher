@@ -10,7 +10,7 @@ void Encryptor::encryptFile(const std::string& inPath,
     std::ifstream in(inPath, std::ios::binary);
     std::ofstream out(outPath, std::ios::binary);
     if (!in || !out) {
-        std::cerr << "File error: " << inPath << " or " << outPath << "\n";
+        std::cerr << "File error: " << inPath << " / " << outPath << "\n";
         return;
     }
     char ch;
