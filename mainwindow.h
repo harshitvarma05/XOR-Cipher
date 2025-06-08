@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QString>
-#include "Tree.h"
+#include "Tree.h"      // still used for encryption questions
 #include "Encryptor.h"
 
 QT_BEGIN_NAMESPACE
@@ -14,40 +14,33 @@ class MainWindow : public QMainWindow {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = nullptr);
+    explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow() override;
 
+    void resetQuestionsEncrypt();
+
 private slots:
-    // Encrypt tab
+    // Encryption
     void on_selectFileEncrypt_clicked();
     void on_yesEncrypt_clicked();
     void on_noEncrypt_clicked();
     void on_encryptButton_clicked();
 
-    // Decrypt tab
+    // Decryption
     void on_selectFileDecrypt_clicked();
-    void on_yesDecrypt_clicked();
-    void on_noDecrypt_clicked();
     void on_decryptButton_clicked();
 
 private:
-    Ui::MainWindow *ui;
+    Ui::MainWindow* ui;
 
-    // Paths
-    QString selectedFileEncrypt;
-    QString selectedFileDecrypt;
+    // Encryption state
+    QString       selectedFileEncrypt;
+    DecisionTree  treeEncrypt;
+    Node*         currentEncrypt;
+    std::string   keyEncrypt;
 
-    // Decision logic
-    DecisionTree treeEncrypt;
-    DecisionTree treeDecrypt;
-    Node*      currentEncrypt;
-    Node*      currentDecrypt;
-    std::string keyEncrypt;
-    std::string keyDecrypt;
-
-    // Reset before each new file selection
-    void resetQuestionsEncrypt();
-    void resetQuestionsDecrypt();
+    // Decryption state
+    QString       selectedFileDecrypt;
 };
 
 #endif // MAINWINDOW_H
