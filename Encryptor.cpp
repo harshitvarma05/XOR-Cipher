@@ -17,7 +17,7 @@ void Encryptor::encryptFile(const std::string& inPath,
 
     // 1) Embed original extension
     std::filesystem::path p(inPath);
-    std::string extension = p.extension().string();            // e.g. ".pdf"
+    std::string extension = p.extension().string();
     uint32_t    extLen    = static_cast<uint32_t>(extension.size());
     out.write(reinterpret_cast<char*>(&extLen), sizeof(extLen));
     out.write(extension.data(), extLen);
