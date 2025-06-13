@@ -1,27 +1,28 @@
-
 #ifndef TREE_H
 #define TREE_H
 
-#include <string>
+#include <QString>
+#include <functional>
 
 struct Node {
-    std::string question;
+    QString question;
+    std::function<bool(const QString&)> check;
     Node* yes;
     Node* no;
-
-    Node(std::string q) : question(q), yes(nullptr), no(nullptr) {}
+    Node(const QString& q,
+         std::function<bool(const QString&)> c)
+      : question(q), check(c), yes(nullptr), no(nullptr) {}
 };
 
 class DecisionTree {
-private:
     Node* root;
-    void deleteTree(Node* node);
-
+    void deleteTree(Node* n);
 public:
     DecisionTree();
     ~DecisionTree();
-    void buildSampleTree();
-    std::string evaluateTree();
+    // Build questions based on the selected file
+    void buildFileBasedTree();
+    Node* getRoot() const { return root; }
 };
 
-#endif
+#endif // TREE_H

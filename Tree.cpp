@@ -1,52 +1,53 @@
-
 #include "Tree.h"
-#include <iostream>
+#include <QFileInfo>
 
-DecisionTree::DecisionTree() {
-    root = nullptr;
+DecisionTree::DecisionTree() : root(nullptr) {}
+DecisionTree::~DecisionTree() { deleteTree(root); }
+
+void DecisionTree::deleteTree(Node* n) {
+  if (!n) return;
+  deleteTree(n->yes);
+  deleteTree(n->no);
+  delete n;
 }
 
-DecisionTree::~DecisionTree() {
-    deleteTree(root);
-}
+void DecisionTree::buildFileBasedTree() {
+  // Tear down old tree
+  deleteTree(root);
 
-void DecisionTree::deleteTree(Node* node) {
-    if (!node) return;
-    deleteTree(node->yes);
-    deleteTree(node->no);
-    delete node;
-}
-
-void DecisionTree::buildSampleTree() {
-    root = new Node("Is the file size > 100KB?");
-    root->yes = new Node("Does filename start with vowel?");
-    root->no = new Node("Does filename contain 'x'?");
-
-    root->yes->yes = new Node("Leaf");
-    root->yes->no = new Node("Leaf");
-
-    root->no->yes = new Node("Leaf");
-    root->no->no = new Node("Leaf");
-}
-
-std::string DecisionTree::evaluateTree() {
-    std::string path = "";
-    Node* current = root;
-
-    while (current->yes && current->no) {
-        std::cout << current->question << " (y/n): ";
-        char ans;
-        std::cin >> ans;
-
-        if (ans == 'y' || ans == 'Y') {
-            path += "1";
-            current = current->yes;
-        } else {
-            path += "0";
-            current = current->no;
-        }
+  // Root: file size > 100 KB?
+  root = new Node(
+    "Is the file size > 100 KB?",
+    [](const QString& f){
+      QFileInfo fi(f);
+      return fi.exists() && fi.size() > 100*1024;
     }
+  );
 
-    std::cout << "Derived binary key: " << path << std::endl;
-    return path;
+  // Yes-branch: filename starts with vowel?
+  root->yes = new Node(
+    "Does the filename start with a vowel?",
+    [](const QString& f){
+      QFileInfo fi(f);
+      if (!fi.exists()) return false;
+      QChar c = fi.fileName().at(0).toLower();
+      return QString("aeiou").contains(c);
+    }
+  );
+
+  // No-branch: filename contains 'x'?
+  root->no = new Node(
+    "Does the filename contain the letter 'x'?",
+    [](const QString& f){
+      QFileInfo fi(f);
+      return fi.exists()
+          && fi.fileName().contains('x', Qt::CaseInsensitive);
+    }
+  );
+
+  // Leaves
+  root->yes->yes = new Node("Leaf", [](auto){ return true; });
+  root->yes->no  = new Node("Leaf", [](auto){ return true; });
+  root->no->yes  = new Node("Leaf", [](auto){ return true; });
+  root->no->no   = new Node("Leaf", [](auto){ return true; });
 }
