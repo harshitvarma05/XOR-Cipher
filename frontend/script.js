@@ -1,117 +1,103 @@
-// ─── decision-tree mirror ─────────────────────────────────────
+// theme toggle
+const themeToggle = document.getElementById('themeToggle');
+const savedTheme  = localStorage.getItem('theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+themeToggle.addEventListener('click', () => {
+    const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('theme', t);
+    themeToggle.textContent = t === 'dark' ? '☀️' : '🌙';
+});
+
+// decision tree
 const decisionTree = {
     question: "Is file size > 100 KB?",
-    check: file => file.size > 100 * 1024,
+    check: f => f.size > 100 * 1024,
     yes: {
         question: "Does filename start with a vowel?",
-        check: file => /^[AEIOUaeiou]/.test(file.name),
-        yes: null,
-        no:  null
+        check: f => /^[AEIOUaeiou]/.test(f.name),
+        yes: null, no: null
     },
     no: {
         question: "Is file extension .txt?",
-        check: file => file.name.toLowerCase().endsWith('.txt'),
-        yes: null,
-        no:  null
+        check: f => f.name.toLowerCase().endsWith('.txt'),
+        yes: null, no: null
     }
 };
 
-// ─── tab logic ────────────────────────────────────────────────
+// tab switching
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
         btn.classList.add('active');
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
         document.getElementById(btn.dataset.tab).classList.add('active');
     });
 });
 
-// ─── helper to wire up drag/drop zones ───────────────────────
-function setupDropZone(zoneId, inputId, infoId) {
-    const zone = document.getElementById(zoneId);
-    const inp  = document.getElementById(inputId);
-    const info = document.getElementById(infoId);
-
-    zone.addEventListener('dragover', e => {
-        e.preventDefault();
-        zone.classList.add('dragover');
-    });
-    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+// drop-zone helper
+function setupDropZone(zId, iId, cb) {
+    const zone = document.getElementById(zId),
+        inp  = document.getElementById(iId);
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', ()    => zone.classList.remove('dragover'));
     zone.addEventListener('drop', e => {
-        e.preventDefault();
-        zone.classList.remove('dragover');
+        e.preventDefault(); zone.classList.remove('dragover');
         if (e.dataTransfer.files.length) {
             inp.files = e.dataTransfer.files;
             inp.dispatchEvent(new Event('change'));
         }
     });
-    inp.addEventListener('change', () => {
-        const f = inp.files[0];
-        info.textContent = f
-            ? `${f.name} (${(f.size/1024).toFixed(1)} KB)`
-            : 'No file selected';
-    });
+    inp.addEventListener('change', () => cb(inp.files[0]));
 }
 
-// Initialize both zones
-setupDropZone('dropZoneEncrypt','fileEncrypt','fileInfoEncrypt');
-setupDropZone('dropZoneDecrypt','fileDecrypt','fileInfoDecrypt');
-
-// ─── ENCRYPT FLOW ────────────────────────────────────────────
+// ENCRYPT flow
 let encFile, encNode, encKey;
-const fileE     = document.getElementById('fileEncrypt');
-const questions = document.getElementById('questions');
-const goE       = document.getElementById('goEncrypt');
-const statusE   = document.getElementById('statusTextEncrypt');
-const spinnerE  = document.getElementById('spinnerEncrypt');
+const questions      = document.getElementById('questions'),
+    qHeader        = document.getElementById('questionHeader'),
+    goE            = document.getElementById('goEncrypt'),
+    loadE          = document.getElementById('loadingBarEncrypt'),
+    statusE        = document.getElementById('statusTextEncrypt'),
+    infoE          = document.getElementById('fileInfoEncrypt');
 
-fileE.addEventListener('change', () => {
-    encFile = fileE.files[0];
-    encNode = decisionTree;
-    encKey  = '';
-    renderQuestion();
-    goE.disabled = true;      // disable until we finish all questions
-    statusE.textContent = '';
+setupDropZone('dropZoneEncrypt','fileEncrypt', f => {
+    encFile = f; encNode = decisionTree; encKey = '';
+    infoE.textContent = `${f.name} (${(f.size/1024).toFixed(1)} KB)`;
+    renderQuestion(); statusE.textContent = '';
 });
 
 function renderQuestion() {
     questions.innerHTML = '';
-    // If no more questions, allow encrypt
     if (!encNode || !encNode.question) {
-        goE.disabled = false;
+        qHeader.classList.add('hidden'); goE.disabled = false;
         return;
     }
-    // Still have questions to answer
     goE.disabled = true;
+    const depth = encKey.length + 1, total = 2;
+    qHeader.textContent = `Question ${depth} of ${total}`;
+    qHeader.classList.remove('hidden');
 
-    const qDiv = document.createElement('div');
-    qDiv.className = 'question';
+    const qDiv = document.createElement('div'); qDiv.className='question';
+    const p    = document.createElement('p'); p.textContent=encNode.question;
+    qDiv.append(p);
 
-    const p = document.createElement('p');
-    p.textContent = encNode.question;
-    qDiv.appendChild(p);
-
-    const btns = document.createElement('div');
-    btns.className = 'answer-buttons';
-    ['Yes','No'].forEach(text => {
-        const b = document.createElement('button');
-        b.textContent = text;
-        b.onclick = () => answer(text === 'Yes');
-        btns.appendChild(b);
+    const btns = document.createElement('div'); btns.className='answer-buttons';
+    ['Yes','No'].forEach(t => {
+        const b = document.createElement('button'); b.textContent=t;
+        b.onclick = ()=>answer(t==='Yes');
+        btns.append(b);
     });
-    qDiv.appendChild(btns);
-
-    questions.appendChild(qDiv);
+    qDiv.append(btns);
+    questions.append(qDiv);
 }
 
 function answer(isYes) {
-    const correct = encNode.check(encFile);
-    if ((isYes && !correct) || (!isYes && correct)) {
-        alert('Incorrect answer. Restarting.');
-        encNode = decisionTree;
-        encKey  = '';
-        renderQuestion();
-        return;
+    if ((isYes && !encNode.check(encFile)) ||
+        (!isYes &&  encNode.check(encFile))) {
+        alert('Incorrect—restarting.');
+        encNode = decisionTree; encKey = '';
+        renderQuestion(); return;
     }
     encKey += isYes ? '1' : '0';
     encNode = isYes ? encNode.yes : encNode.no;
@@ -119,69 +105,59 @@ function answer(isYes) {
 }
 
 goE.addEventListener('click', async () => {
-    statusE.textContent = '';
-    spinnerE.classList.remove('hidden');
+    statusE.textContent = ''; loadE.classList.remove('hidden');
     try {
         const fd  = new FormData();
         fd.append('file', encFile);
         fd.append('key',  encKey);
-        const res = await fetch('/encrypt', { method:'POST', body:fd });
+        const res = await fetch('/encrypt',{method:'POST',body:fd});
         if (!res.ok) throw new Error(`Server ${res.status}`);
-        const blob = await res.blob();
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href     = url;
-        a.download = encFile.name + '.enc';
-        a.click();
+        const blob = await res.blob(),
+            url  = URL.createObjectURL(blob),
+            a    = document.createElement('a');
+        a.href = url; a.download = encFile.name + '.enc'; a.click();
         URL.revokeObjectURL(url);
-        statusE.textContent = 'Encrypted!';
-    } catch (err) {
+        statusE.textContent='Encrypted!';
+    } catch(err) {
         console.error(err);
-        statusE.textContent = 'Error: ' + err.message;
+        statusE.textContent='Error: '+err.message;
     } finally {
-        spinnerE.classList.add('hidden');
+        loadE.classList.add('hidden');
     }
 });
 
-// ─── DECRYPT FLOW ────────────────────────────────────────────
+// DECRYPT flow
 let decFile;
-const fileD   = document.getElementById('fileDecrypt');
-const goD     = document.getElementById('goDecrypt');
-const statusD = document.getElementById('statusTextDecrypt');
-const spinnerD= document.getElementById('spinnerDecrypt');
+const goD     = document.getElementById('goDecrypt'),
+    loadD   = document.getElementById('loadingBarDecrypt'),
+    statusD = document.getElementById('statusTextDecrypt'),
+    infoD   = document.getElementById('fileInfoDecrypt');
 
-fileD.addEventListener('change', () => {
-    decFile = fileD.files[0];
-    goD.disabled = false;
-    statusD.textContent = '';
+setupDropZone('dropZoneDecrypt','fileDecrypt', f => {
+    decFile = f; statusD.textContent=''; goD.disabled=false;
+    infoD.textContent = `${f.name} (${(f.size/1024).toFixed(1)} KB)`;
 });
 
-goD.addEventListener('click', async () => {
-    statusD.textContent = '';
-    spinnerD.classList.remove('hidden');
+goD.addEventListener('click', async ()=>{
+    statusD.textContent=''; loadD.classList.remove('hidden');
     try {
         const fd  = new FormData();
         fd.append('file', decFile);
-        const res = await fetch('/decrypt', { method:'POST', body:fd });
+        const res = await fetch('/decrypt',{method:'POST',body:fd});
         if (!res.ok) throw new Error(`Server ${res.status}`);
         const blob = await res.blob();
         let name = decFile.name.replace(/\.enc$/i,'');
         const cd  = res.headers.get('Content-Disposition');
-        if (cd) {
-            const m = cd.match(/filename="([^"]+)"/);
-            if (m) name = m[1];
-        }
-        const url = URL.createObjectURL(blob);
-        const a   = document.createElement('a');
-        a.href    = url;
-        a.download= name;
-        a.click();
+        if(cd){ const m=cd.match(/filename="([^"]+)"/); if(m) name=m[1]; }
+        const url = URL.createObjectURL(blob),
+            a   = document.createElement('a');
+        a.href    = url; a.download=name; a.click();
         URL.revokeObjectURL(url);
-        statusD.textContent = 'Decrypted!';
-    } catch (err) {
+        statusD.textContent='Decrypted!';
+    } catch(err) {
         console.error(err);
-        statusD.textContent = 'Error: ' + err.message;
+        statusD.textContent='Error: '+err.message;
     } finally {
-        spinnerD.classList.add('hidden');
+        loadD.classList.add('hidden');
     }
 });
