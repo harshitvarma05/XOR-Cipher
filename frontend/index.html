@@ -3,29 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <title>Secure File Encryptor</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <h1>Secure File Encryptor</h1>
-<div class="tab">
+
+<nav class="tabs">
     <button data-tab="encrypt" class="tab-btn active">Encrypt</button>
     <button data-tab="decrypt" class="tab-btn">Decrypt</button>
-</div>
+</nav>
 
-<!-- Encrypt UI -->
-<section id="encrypt" class="tab-content">
-    <input type="file" id="fileEncrypt" />
-    <div id="questions"></div>
-    <button id="goEncrypt" disabled>Encrypt &amp; Download</button>
-    <div id="statusEncrypt"></div>
-</section>
+<main>
+    <!-- Encrypt Panel -->
+    <section id="encrypt" class="panel active">
+        <div id="dropZoneEncrypt" class="drop-zone">
+            <p>Drag &amp; drop your file here<br>or click to select</p>
+            <input type="file" id="fileEncrypt" />
+        </div>
+        <div id="fileInfoEncrypt" class="file-info">No file selected</div>
 
-<!-- Decrypt UI -->
-<section id="decrypt" class="tab-content hidden">
-    <input type="file" id="fileDecrypt" />
-    <button id="goDecrypt" disabled>Decrypt &amp; Download</button>
-    <div id="statusDecrypt"></div>
-</section>
+        <div id="questions" class="questions"></div>
+
+        <button id="goEncrypt" class="action-btn" disabled>Encrypt &amp; Download</button>
+
+        <div class="status">
+            <div id="spinnerEncrypt" class="spinner hidden"></div>
+            <span id="statusTextEncrypt"></span>
+        </div>
+    </section>
+
+    <!-- Decrypt Panel -->
+    <section id="decrypt" class="panel">
+        <div id="dropZoneDecrypt" class="drop-zone">
+            <p>Drag &amp; drop your .enc file here<br>or click to select</p>
+            <input type="file" id="fileDecrypt" />
+        </div>
+        <div id="fileInfoDecrypt" class="file-info">No file selected</div>
+
+        <button id="goDecrypt" class="action-btn" disabled>Decrypt &amp; Download</button>
+
+        <div class="status">
+            <div id="spinnerDecrypt" class="spinner hidden"></div>
+            <span id="statusTextDecrypt"></span>
+        </div>
+    </section>
+</main>
 
 <script src="script.js"></script>
 </body>
