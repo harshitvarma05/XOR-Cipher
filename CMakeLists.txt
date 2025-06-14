@@ -14,12 +14,12 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 add_executable(SecureFileEncryptionQt
-        main.cpp
-        mainwindow.cpp
-        mainwindow.ui
-        Tree.cpp
-        Encryptor.cpp
+        backend/main.cpp
+        backend/mainwindow.cpp
+        backend/mainwindow.ui
+        backend/Tree.cpp
+        backend/Encryptor.cpp
 )
 
-target_include_directories(SecureFileEncryptionQt PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(SecureFileEncryptionQt PRIVATE .)
 target_link_libraries(SecureFileEncryptionQt PRIVATE Qt6::Widgets)

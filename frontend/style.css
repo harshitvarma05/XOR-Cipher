@@ -1,0 +1,16 @@
+body {
+    font-family: sans-serif;
+    max-width: 600px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+h1 { text-align: center; }
+.tab { display: flex; margin-bottom: 1rem; }
+.tab-btn { flex:1; padding:0.5rem; cursor:pointer; background:#eee; border:1px solid #ccc; }
+.tab-btn.active { background:#ddd; }
+.tab-content { border:1px solid #ccc; padding:1rem; }
+.hidden { display:none; }
+#questions { margin:1rem 0; }
+.question { margin-bottom:0.5rem; }
+.question button { margin-left:0.5rem; }
+#statusEncrypt, #statusDecrypt { margin-top:1rem; color:#333; }

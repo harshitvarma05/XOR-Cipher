@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Secure File Encryptor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>Secure File Encryptor</h1>
+<div class="tab">
+    <button data-tab="encrypt" class="tab-btn active">Encrypt</button>
+    <button data-tab="decrypt" class="tab-btn">Decrypt</button>
+</div>
+
+<!-- Encrypt UI -->
+<section id="encrypt" class="tab-content">
+    <input type="file" id="fileEncrypt" />
+    <div id="questions"></div>
+    <button id="goEncrypt" disabled>Encrypt &amp; Download</button>
+    <div id="statusEncrypt"></div>
+</section>
+
+<!-- Decrypt UI -->
+<section id="decrypt" class="tab-content hidden">
+    <input type="file" id="fileDecrypt" />
+    <button id="goDecrypt" disabled>Decrypt &amp; Download</button>
+    <div id="statusDecrypt"></div>
+</section>
+
+<script src="script.js"></script>
+</body>
+</html>
