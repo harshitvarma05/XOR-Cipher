@@ -18,8 +18,8 @@ add_executable(SecureFileEncryptionQt
         backend/mainwindow.cpp
         backend/Tree.cpp
         backend/Encryptor.cpp
-        backend/Crypto.cpp        # ← your new AES+RSA module
-        backend/mainwindow.ui     # AUTOUIC will process this
+        backend/Crypto.cpp
+        backend/mainwindow.ui
 )
 
 target_include_directories(SecureFileEncryptionQt
@@ -31,5 +31,5 @@ target_link_libraries(SecureFileEncryptionQt
         PRIVATE
         Qt6::Widgets
         OpenSSL::Crypto
-        OpenSSL::SSL      # optional if you only ever call the Crypto API
+        OpenSSL::SSL
 )
