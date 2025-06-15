@@ -1,4 +1,3 @@
-// server.js
 const express   = require('express');
 const multer    = require('multer');
 const path      = require('path');
@@ -9,7 +8,6 @@ const upload = multer({ dest: 'tmp/' });
 const app    = express();
 const PORT   = 3000;
 
-// 1) Path to Qt CLI executable
 const CLI = path.resolve(__dirname,
     'cmake-build-debug',
     'SecureFileEncryptionQt.exe'
@@ -19,18 +17,15 @@ if (!fs.existsSync(CLI)) {
     process.exit(1);
 }
 
-// 2) Keys folder next to the EXE
 const exeDir  = path.dirname(CLI);
 const pubKey  = path.join(exeDir, 'keys', 'public.pem');
 const privKey = path.join(exeDir, 'keys', 'private.pem');
 
-// 3) Ensure keys exist (or were generated previously)
 if (!fs.existsSync(pubKey) || !fs.existsSync(privKey)) {
     console.error('ERROR: Missing keys in', path.join(exeDir,'keys'));
     process.exit(1);
 }
 
-// Helper: run the CLI mode and return stdout as float ms
 function runCli(mode, inF, outF, arg) {
     return new Promise((resolve, reject) => {
         const args = [mode, inF, outF];
@@ -49,13 +44,11 @@ function runCli(mode, inF, outF, arg) {
     });
 }
 
-// Serve static frontend
 app.use(express.static('frontend'));
 app.get('/', (req, res) =>
     res.sendFile(path.join(__dirname, 'frontend', 'index.html'))
 );
 
-// ── XOR Encrypt ───────────────────────────────────────
 app.post('/encrypt', upload.single('file'), async (req, res) => {
     const inF  = req.file.path;
     const outF = inF + '.enc';
@@ -72,7 +65,6 @@ app.post('/encrypt', upload.single('file'), async (req, res) => {
     }
 });
 
-// ── XOR Decrypt ───────────────────────────────────────
 app.post('/decrypt', upload.single('file'), async (req, res) => {
     const inF   = req.file.path;
     const base  = path.basename(req.file.originalname, '.enc');
@@ -90,7 +82,6 @@ app.post('/decrypt', upload.single('file'), async (req, res) => {
     }
 });
 
-// ── Compare XOR vs AES+RSA (with key‐gen) ───────────────────────────
 app.post('/compare', upload.single('file'), async (req, res) => {
     const tmp     = req.file.path;
     const xorEncF = tmp + '.xor.enc';
@@ -99,24 +90,24 @@ app.post('/compare', upload.single('file'), async (req, res) => {
     const arDecF  = tmp + '.ar.dec';
 
     try {
-        // 1) XOR timings
+
         const xorKey    = req.body.key || '0';
         const xorEncMs  = await runCli('encrypt',        tmp,    xorEncF, xorKey);
         const xorDecMs  = await runCli('decrypt',        xorEncF, xorDecF);
 
-        // 2) RSA key‐generation timing
+
         const aesrsaKeygenMs = await runCli('aesrsa-keygen', pubKey, privKey);
 
-        // 3) AES+RSA wrap/unwrap timings
+
         const aesrsaEncMs = await runCli('aesrsa-encrypt', tmp, arEncF, pubKey);
         const aesrsaDecMs = await runCli('aesrsa-decrypt', arEncF, arDecF, privKey);
 
-        // Cleanup all temp files
+
         [tmp, xorEncF, xorDecF, arEncF, arDecF].forEach(f => {
             if (fs.existsSync(f)) fs.unlinkSync(f);
         });
 
-        // Return all timings
+
         res.json({
             xorEncMs,
             xorDecMs,

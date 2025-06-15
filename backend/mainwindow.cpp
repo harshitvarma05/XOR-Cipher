@@ -16,15 +16,15 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    // ── Encrypt setup ──
+   
     treeEncrypt.buildFileBasedTree();
     resetQuestionsEncrypt();
 
-    // ── Hide decrypt progress ──
+   
     ui->progressDecrypt->hide();
     ui->statusDecrypt->clear();
 
-    // ── Prepare Compare table ──
+   
     ui->compareTable->setRowCount(2);
     ui->compareTable->setColumnCount(3);
     ui->compareTable->setHorizontalHeaderLabels(
@@ -32,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->compareTable->horizontalHeader()
        ->setSectionResizeMode(QHeaderView::Stretch);
 
-    // **Pre-populate** all cells so item(r,c) is never null
+   
     for(int r = 0; r < 2; ++r) {
       for(int c = 0; c < 3; ++c) {
         ui->compareTable->setItem(r, c, new QTableWidgetItem());
@@ -57,7 +57,6 @@ void MainWindow::resetQuestionsEncrypt() {
     ui->statusEncrypt  ->clear();
 }
 
-// ── ENCRYPT ────────────────────────────────────────────
 
 void MainWindow::on_selectFileEncrypt_clicked() {
     QString file = QFileDialog::getOpenFileName(
@@ -145,7 +144,6 @@ void MainWindow::on_encryptButton_clicked() {
     ui->statusEncrypt->append("Done: " + savePath);
 }
 
-// ── DECRYPT ────────────────────────────────────────────
 
 void MainWindow::on_selectFileDecrypt_clicked() {
     selectedFileDecrypt = QFileDialog::getOpenFileName(
@@ -183,7 +181,6 @@ void MainWindow::on_decryptButton_clicked() {
     ui->statusDecrypt->append("Done: " + savePath);
 }
 
-// ── COMPARE ────────────────────────────────────────────
 
 void MainWindow::on_selectFileCompare_clicked() {
     compareFile = QFileDialog::getOpenFileName(

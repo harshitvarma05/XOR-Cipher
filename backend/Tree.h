@@ -20,9 +20,9 @@ class DecisionTree {
 public:
     DecisionTree();
     ~DecisionTree();
-    // Build questions based on the selected file
+   
     void buildFileBasedTree();
     Node* getRoot() const { return root; }
 };
 
-#endif // TREE_H
+#endif

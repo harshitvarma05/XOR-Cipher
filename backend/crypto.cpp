@@ -1,4 +1,3 @@
-// backend/Crypto.cpp
 #include "Crypto.h"
 #include <openssl/evp.h>
 #include <openssl/pem.h>
@@ -10,7 +9,6 @@
 #include <vector>
 #include <cstdlib>
 
-// ─── File I/O helpers ────────────────────────────────────────
 static std::vector<unsigned char> readFile(const std::string& path) {
     std::ifstream in(path, std::ios::binary);
     return { std::istreambuf_iterator<char>(in), {} };
@@ -21,13 +19,11 @@ static void writeFile(const std::string& path, const std::vector<unsigned char>&
     out.write(reinterpret_cast<const char*>(data.data()), data.size());
 }
 
-// ─── OpenSSL error handler ───────────────────────────────────
 static void handleOpenSSLErr() {
     ERR_print_errors_fp(stderr);
     std::exit(1);
 }
 
-// ─── Load an RSA key (pub or priv) ───────────────────────────
 static RSA* loadRSA(const std::string& path, bool isPublic) {
     FILE* f = fopen(path.c_str(), "rb");
     if (!f) { perror("fopen"); std::exit(1); }
@@ -39,7 +35,6 @@ static RSA* loadRSA(const std::string& path, bool isPublic) {
     return r;
 }
 
-// ─── AES-256-CBC encrypt/decrypt ─────────────────────────────
 static std::vector<unsigned char> aesEncrypt(
     const std::vector<unsigned char>& pt,
     const std::vector<unsigned char>& key,
@@ -74,7 +69,6 @@ static std::vector<unsigned char> aesDecrypt(
     return pt;
 }
 
-// ─── RSA-OAEP wrap/unwrap ─────────────────────────────────────
 static std::vector<unsigned char> rsaWrapKey(RSA* rsaPub,
     const std::vector<unsigned char>& key)
 {
@@ -101,7 +95,6 @@ static std::vector<unsigned char> rsaUnwrapKey(RSA* rsaPriv,
     return out;
 }
 
-// ─── Public API implementations ──────────────────────────────
 
 double hybridEncrypt(
     const std::string& inPath,
@@ -111,18 +104,18 @@ double hybridEncrypt(
     auto pt = readFile(inPath);
     RSA* rsaPub = loadRSA(pubKeyPath, true);
 
-    // Generate random AES key + IV
+   
     std::vector<unsigned char> aesKey(32), iv(16);
     RAND_bytes(aesKey.data(), aesKey.size());
     RAND_bytes(iv.data(),    iv.size());
 
-    // Encrypt & time
+   
     auto t0 = std::chrono::high_resolution_clock::now();
     auto ct = aesEncrypt(pt, aesKey, iv);
     auto wrappedKey = rsaWrapKey(rsaPub, aesKey);
     auto t1 = std::chrono::high_resolution_clock::now();
 
-    // Serialize: [4B keyLen BE][wrappedKey][16B IV][ciphertext]
+   
     uint32_t keyLen = static_cast<uint32_t>(wrappedKey.size());
     std::vector<unsigned char> out;
     out.reserve(4 + wrappedKey.size() + iv.size() + ct.size());
@@ -147,7 +140,7 @@ double hybridDecrypt(
     auto data = readFile(inPath);
     size_t pos = 0;
 
-    // Deserialize keyLen (big-endian)
+   
     uint32_t keyLen =
         (uint32_t(data[pos]) << 24) |
         (uint32_t(data[pos+1]) << 16) |
@@ -155,22 +148,22 @@ double hybridDecrypt(
          uint32_t(data[pos+3]);
     pos += 4;
 
-    // Extract wrapped AES key
+   
     std::vector<unsigned char> wrappedKey(
       data.begin()+pos, data.begin()+pos+keyLen
     );
     pos += keyLen;
 
-    // Extract IV
+   
     std::vector<unsigned char> iv(data.begin()+pos, data.begin()+pos+16);
     pos += 16;
 
-    // Ciphertext remainder
+   
     std::vector<unsigned char> ct(data.begin()+pos, data.end());
 
     RSA* rsaPriv = loadRSA(privKeyPath, false);
 
-    // Decrypt & time
+   
     auto t0 = std::chrono::high_resolution_clock::now();
     auto aesKey = rsaUnwrapKey(rsaPriv, wrappedKey);
     auto pt     = aesDecrypt(ct, aesKey, iv);

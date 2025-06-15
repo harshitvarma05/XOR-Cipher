@@ -1,4 +1,4 @@
-// ── Theme Toggle ──────────────────────────────────────
+
 const themeToggle = document.getElementById('themeToggle');
 const savedTheme  = localStorage.getItem('theme') || 'light';
 document.documentElement.setAttribute('data-theme', savedTheme);
@@ -10,7 +10,6 @@ themeToggle.addEventListener('click', () => {
     themeToggle.textContent = t === 'dark' ? '☀️' : '🌙';
 });
 
-// ── Decision Tree (unchanged) ─────────────────────────
 const decisionTree = {
     question: "Is file size > 100 KB?",
     check: f => f.size > 100 * 1024,
@@ -28,7 +27,6 @@ const decisionTree = {
     }
 };
 
-// ── Tab Navigation ────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -38,7 +36,6 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     });
 });
 
-// ── Drag‐&‐Drop Helper ─────────────────────────────────
 function setupDropZone(zoneId, inputId, onFile) {
     const zone = document.getElementById(zoneId),
         inp  = document.getElementById(inputId);
@@ -66,7 +63,6 @@ function setupDropZone(zoneId, inputId, onFile) {
     });
 }
 
-// ── ENCRYPT Flow ──────────────────────────────────────
 let encFile = null, encNode = null, encKey = '';
 const questions      = document.getElementById('questions'),
     questionHeader = document.getElementById('questionHeader'),
@@ -153,7 +149,6 @@ goE.addEventListener('click', async () => {
     }
 });
 
-// ── DECRYPT Flow ──────────────────────────────────────
 let decFile = null;
 const goD     = document.getElementById('goDecrypt'),
     loadD   = document.getElementById('loadingBarDecrypt'),
@@ -197,7 +192,6 @@ goD.addEventListener('click', async () => {
     }
 });
 
-// ── COMPARE Flow (with keygen + total) ─────────────────────────────
 let cmpFile = null;
 const dropZoneCompare  = 'dropZoneCompare';
 const fileInputCompare = 'fileCompare';
@@ -246,11 +240,11 @@ goC.addEventListener('click', async () => {
             aesrsaDecMs
         } = await res.json();
 
-        // compute totals
+       
         const xorTotal = xorEncMs + xorDecMs;
         const rsaTotal = aesrsaKeygenMs + aesrsaEncMs + aesrsaDecMs;
 
-        // populate table
+       
         xorEncCell.textContent    = xorEncMs.toFixed(1);
         xorDecCell.textContent    = xorDecMs.toFixed(1);
         xorTotalCell.textContent  = xorTotal.toFixed(1);

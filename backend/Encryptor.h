@@ -13,4 +13,4 @@ public:
                      const std::string& outPath) const;
 };
 
-#endif // ENCRYPTOR_H
+#endif

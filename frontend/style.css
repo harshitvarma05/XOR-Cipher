@@ -1,11 +1,6 @@
-/*──────────────────────────────────────────────────────────────────────────*
- * Apple-Style CSS for Secure File Encryptor
- *──────────────────────────────────────────────────────────────────────────*/
 
-/* 1️⃣ Typography & Base */
 
 :root {
-    /* Accent / system colors */
     --sys-blue: #007aff;
     --sys-gray: #8e8e93;
     --sys-bg-light: rgba(255, 255, 255, 0.8);
@@ -35,8 +30,8 @@
 html {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-    font-size: 17px;         /* Base font size per Apple HIG */
-    line-height: 1.5;        /* Comfortable reading */
+    font-size: 17px;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
 }
 
@@ -49,7 +44,6 @@ body {
     min-height: 100vh;
 }
 
-/* 2️⃣ Header & Tabs */
 
 header {
     text-align: center;
@@ -90,7 +84,6 @@ h1 {
     background: rgba(0,0,0,0.05);
 }
 
-/* 3️⃣ Panels */
 
 main {
     flex: 1;
@@ -116,7 +109,6 @@ main {
     display: block;
 }
 
-/* 4️⃣ Drop-Zone */
 
 .drop-zone {
     position: relative;
@@ -147,7 +139,7 @@ main {
     cursor: pointer;
 }
 
-/* 5️⃣ File Info */
+
 
 .file-info {
     margin-top: 12px;
@@ -156,7 +148,7 @@ main {
     text-align: center;
 }
 
-/* 6️⃣ Questions */
+
 
 .question-header {
     font-size: 14px;
@@ -176,7 +168,7 @@ main {
     color: var(--text);
 }
 
-/* 7️⃣ Answer Buttons */
+
 
 .answer-buttons {
     display: flex;
@@ -199,7 +191,7 @@ main {
     transform: scale(0.98);
 }
 
-/* 8️⃣ Action Button */
+
 
 .action-btn {
     display: block;
@@ -226,7 +218,7 @@ main {
     transform: scale(0.98);
 }
 
-/* 9️⃣ Loading Bar */
+
 
 .loading-bar {
     position: relative;
@@ -253,7 +245,7 @@ main {
     100% { left: 100%; }
 }
 
-/* 🔟 Compare Table */
+
 
 .compare-table {
     width: 100%;
@@ -274,7 +266,7 @@ main {
     font-weight: 600;
 }
 
-/* 1️⃣1️⃣ Theme Toggle */
+
 
 .theme-toggle {
     position: fixed;
@@ -294,7 +286,7 @@ main {
     transform: translateY(-2px);
 }
 
-/* 1️⃣2️⃣ Responsive */
+
 
 @media (max-width: 480px) {
     :root { --spacing: 16px; }

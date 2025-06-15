@@ -1,4 +1,4 @@
-// backend/main.cpp
+
 
 #include <QApplication>
 #include <QElapsedTimer>
@@ -7,27 +7,21 @@
 #include <stdexcept>
 #include <cstdio>
 
-// GUI
 #include "mainwindow.h"
 
-// XOR
 #include "Encryptor.h"
 
-// AES+RSA hybrid
 #include "Crypto.h"
 
-// OpenSSL for key generation
 #include <openssl/evp.h>
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
 #include <openssl/bn.h>
 
-// ─────────────────────────────────────────────────────────────
-// Generate a 2048-bit RSA keypair and write to PEM files
 static void generateKeypairFiles(const std::string& pubPath,
                                  const std::string& privPath)
 {
-    // 1) Create the RSA key
+   
     RSA* rsa = RSA_new();
     BIGNUM* bn = BN_new();
     if (!BN_set_word(bn, RSA_F4))
@@ -36,13 +30,13 @@ static void generateKeypairFiles(const std::string& pubPath,
         throw std::runtime_error("RSA_generate_key_ex failed");
     BN_free(bn);
 
-    // 2) Wrap RSA in an EVP_PKEY
+   
     EVP_PKEY* pkey = EVP_PKEY_new();
     if (!EVP_PKEY_assign_RSA(pkey, rsa))
         throw std::runtime_error("EVP_PKEY_assign_RSA failed");
-    // Note: pkey now owns rsa, so do not call RSA_free(rsa)
+   
 
-    // 3) Write public key (SubjectPublicKeyInfo)
+   
     {
         FILE* fp = fopen(pubPath.c_str(), "wb");
         if (!fp) throw std::runtime_error("Cannot open pub.pem for writing");
@@ -50,7 +44,7 @@ static void generateKeypairFiles(const std::string& pubPath,
             throw std::runtime_error("PEM_write_PUBKEY failed");
         fclose(fp);
     }
-    // 4) Write private key (PKCS#1)
+   
     {
         FILE* fp = fopen(privPath.c_str(), "wb");
         if (!fp) throw std::runtime_error("Cannot open priv.pem for writing");
@@ -61,14 +55,13 @@ static void generateKeypairFiles(const std::string& pubPath,
 
     EVP_PKEY_free(pkey);
 }
-// ─────────────────────────────────────────────────────────────
 
 int main(int argc, char* argv[]) {
-    // CLI mode
+   
     if (argc > 1) {
         std::string mode = argv[1];
 
-        // XOR encrypt: encrypt <in> <out> <key>
+       
         if (mode == "encrypt" && argc == 5) {
             std::string inFile  = argv[2];
             std::string outFile = argv[3];
@@ -85,7 +78,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        // XOR decrypt: decrypt <in> <out>
+       
         if (mode == "decrypt" && argc == 4) {
             std::string inFile  = argv[2];
             std::string outFile = argv[3];
@@ -101,7 +94,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        // AES+RSA encrypt: aesrsa-encrypt <in> <out> <pub.pem>
+       
         if (mode == "aesrsa-encrypt" && argc == 5) {
             std::string inFile  = argv[2];
             std::string outFile = argv[3];
@@ -116,7 +109,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        // AES+RSA decrypt: aesrsa-decrypt <in> <out> <priv.pem>
+       
         if (mode == "aesrsa-decrypt" && argc == 5) {
             std::string inFile   = argv[2];
             std::string outFile  = argv[3];
@@ -131,7 +124,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        // RSA key‐generation: aesrsa-keygen <pub.pem> <priv.pem>
+       
         if (mode == "aesrsa-keygen" && argc == 4) {
             std::string pubPem  = argv[2];
             std::string privPem = argv[3];
@@ -146,7 +139,7 @@ int main(int argc, char* argv[]) {
             }
         }
 
-        // Fallback usage
+       
         std::cerr
             << "Usage:\n"
             << "  " << argv[0] << " encrypt <in> <out> <key>\n"
@@ -157,7 +150,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Launch Qt GUI
+   
     QApplication app(argc, argv);
     MainWindow w;
     w.show();

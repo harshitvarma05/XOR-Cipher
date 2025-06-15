@@ -12,10 +12,10 @@ void DecisionTree::deleteTree(Node* n) {
 }
 
 void DecisionTree::buildFileBasedTree() {
-  // Tear down old tree
+ 
   deleteTree(root);
 
-  // Root: file size > 100 KB?
+ 
   root = new Node(
     "Is the file size > 100 KB?",
     [](const QString& f){
@@ -24,7 +24,7 @@ void DecisionTree::buildFileBasedTree() {
     }
   );
 
-  // Yes-branch: filename starts with vowel?
+ 
   root->yes = new Node(
     "Does the filename start with a vowel?",
     [](const QString& f){
@@ -35,7 +35,7 @@ void DecisionTree::buildFileBasedTree() {
     }
   );
 
-  // No-branch: filename contains 'x'?
+ 
   root->no = new Node(
     "Does the filename contain the letter 'x'?",
     [](const QString& f){
@@ -45,7 +45,7 @@ void DecisionTree::buildFileBasedTree() {
     }
   );
 
-  // Leaves
+ 
   root->yes->yes = new Node("Leaf", [](auto){ return true; });
   root->yes->no  = new Node("Leaf", [](auto){ return true; });
   root->no->yes  = new Node("Leaf", [](auto){ return true; });
