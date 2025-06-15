@@ -5,17 +5,14 @@
   <property name="geometry">
    <rect><x>0</x><y>0</y><width>700</width><height>500</height></rect>
   </property>
-  <property name="windowTitle">
-   <string>Secure File Encryption</string>
-  </property>
+  <property name="windowTitle"><string>Secure File Encryption</string></property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout" name="vLayout">
     <item>
      <widget class="QTabWidget" name="tabWidget">
 
       <!-- Encrypt Tab -->
       <widget class="QWidget" name="encryptTab">
-       <attribute name="title"><string>Encrypt</string></attribute>
        <layout class="QVBoxLayout" name="encryptLayout">
         <item>
          <widget class="QPushButton" name="selectFileEncrypt">
@@ -48,6 +45,8 @@
         </item>
         <item>
          <widget class="QProgressBar" name="progressEncrypt">
+          <property name="minimum"><number>0</number></property>
+          <property name="maximum"><number>0</number></property>
           <property name="visible"><bool>false</bool></property>
          </widget>
         </item>
@@ -61,7 +60,6 @@
 
       <!-- Decrypt Tab -->
       <widget class="QWidget" name="decryptTab">
-       <attribute name="title"><string>Decrypt</string></attribute>
        <layout class="QVBoxLayout" name="decryptLayout">
         <item>
          <widget class="QPushButton" name="selectFileDecrypt">
@@ -75,6 +73,8 @@
         </item>
         <item>
          <widget class="QProgressBar" name="progressDecrypt">
+          <property name="minimum"><number>0</number></property>
+          <property name="maximum"><number>0</number></property>
           <property name="visible"><bool>false</bool></property>
          </widget>
         </item>
@@ -86,56 +86,19 @@
        </layout>
       </widget>
 
-      <!-- Algorithm Tab -->
-      <widget class="QWidget" name="algoTab">
-       <attribute name="title"><string>Algorithm</string></attribute>
-       <layout class="QVBoxLayout" name="algoLayout">
-        <item>
-         <widget class="QTextEdit" name="algoDesc">
-          <property name="readOnly"><bool>true</bool></property>
-          <property name="html">
-           <string><![CDATA[
-             <h2>Secure File Encryption via Decision-Path Encoding</h2>
-             <p>This application generates an XOR key by asking a small set of
-             yes/no questions about file properties (decision tree), embeds that
-             key and the original extension into the encrypted file header,
-             then performs symmetric XOR encryption/decryption.</p>
-             <h3>Algorithm Steps</h3>
-             <ol>
-               <li>Build decision tree of file-property questions.</li>
-               <li>Traverse tree based on user answers to form binary key.</li>
-               <li>Encrypt/decrypt payload via XOR with repeating key.</li>
-               <li>Embed and retrieve &lt;extLen&gt;&lt;extension&gt;
-                   &lt;keyLen&gt;&lt;key&gt; in file header.</li>
-             </ol>
-             <h3>Program Structure</h3>
-             <ul>
-               <li>UI Layer: Qt6 tabs & controls</li>
-               <li>DecisionTree Module</li>
-               <li>Encryptor Module</li>
-               <li>MainWindow orchestrates work</li>
-             </ul>
-           ]]></string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-
       <!-- Compare Tab -->
       <widget class="QWidget" name="compareTab">
-       <attribute name="title"><string>Compare</string></attribute>
        <layout class="QVBoxLayout" name="compareLayout">
         <item>
          <layout class="QHBoxLayout" name="compareControls">
           <item>
            <widget class="QPushButton" name="selectFileCompare">
-            <property name="text"><string>Select File</string></property>
+            <property name="text"><string>Select File for Comparison</string></property>
            </widget>
           </item>
           <item>
            <widget class="QPushButton" name="runCompare">
-            <property name="text"><string>Run</string></property>
+            <property name="text"><string>Run Comparison</string></property>
            </widget>
           </item>
          </layout>
@@ -143,13 +106,17 @@
         <item>
          <layout class="QFormLayout" name="fileInfoLayout">
           <item row="0" column="0">
-           <widget class="QLabel"><property name="text"><string>Path:</string></property></widget>
+           <widget class="QLabel">
+            <property name="text"><string>Path:</string></property>
+           </widget>
           </item>
           <item row="0" column="1">
            <widget class="QLabel" name="filePathCompare"/>
           </item>
           <item row="1" column="0">
-           <widget class="QLabel"><property name="text"><string>Size:</string></property></widget>
+           <widget class="QLabel">
+            <property name="text"><string>Size:</string></property>
+           </widget>
           </item>
           <item row="1" column="1">
            <widget class="QLabel" name="fileSizeCompare"/>
@@ -159,14 +126,18 @@
         <item>
          <widget class="QTableWidget" name="compareTable">
           <property name="rowCount"><number>2</number></property>
-          <property name="columnCount"><number>2</number></property>
-          <property name="horizontalHeaderLabels">
-           <stringlist>
-            <string>Algorithm</string>
-            <string>Time (ms)</string>
-           </stringlist>
-          </property>
+          <property name="columnCount"><number>3</number></property>
          </widget>
+        </item>
+        <item>
+         <widget class="QProgressBar" name="loadingCompare">
+          <property name="minimum"><number>0</number></property>
+          <property name="maximum"><number>0</number></property>
+          <property name="visible"><bool>false</bool></property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="statusCompare"/>
         </item>
        </layout>
       </widget>

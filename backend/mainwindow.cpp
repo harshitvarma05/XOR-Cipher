@@ -3,60 +3,68 @@
 
 #include <QFileDialog>
 #include <QMessageBox>
-#include <QElapsedTimer>
-#include <QTableWidgetItem>
-#include <QHeaderView>
 #include <QFileInfo>
-#include <filesystem>
+#include <QDir>
+#include <QHeaderView>
+#include <QElapsedTimer>
+#include <QFile>
+#include <QTableWidgetItem>
 
 MainWindow::MainWindow(QWidget *parent)
   : QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    currentEncrypt(nullptr)
+    ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    // Initialize encryption decision tree
+    // ── Encrypt setup ──
     treeEncrypt.buildFileBasedTree();
     resetQuestionsEncrypt();
 
-    // Decrypt tab: hide until file selected
+    // ── Hide decrypt progress ──
     ui->progressDecrypt->hide();
     ui->statusDecrypt->clear();
 
-    // Prepare compare table
+    // ── Prepare Compare table ──
     ui->compareTable->setRowCount(2);
-    ui->compareTable->setColumnCount(2);
+    ui->compareTable->setColumnCount(3);
     ui->compareTable->setHorizontalHeaderLabels(
-      QStringList{"Algorithm", "Time (ms)"}
-    );
+      QStringList{"Algorithm","Encrypt (ms)","Decrypt (ms)"});
     ui->compareTable->horizontalHeader()
-      ->setSectionResizeMode(QHeaderView::Stretch);
+       ->setSectionResizeMode(QHeaderView::Stretch);
+
+    // **Pre-populate** all cells so item(r,c) is never null
+    for(int r = 0; r < 2; ++r) {
+      for(int c = 0; c < 3; ++c) {
+        ui->compareTable->setItem(r, c, new QTableWidgetItem());
+      }
+    }
+
+    ui->compareTable->hide();
 }
 
 MainWindow::~MainWindow() {
     delete ui;
 }
 
-// ─── ENCRYPTION ─────────────────────────────────────────────────
-
 void MainWindow::resetQuestionsEncrypt() {
     keyEncrypt.clear();
     currentEncrypt = treeEncrypt.getRoot();
     ui->questionEncrypt->setText(currentEncrypt->question);
     ui->questionEncrypt->show();
-    ui->yesEncrypt->show();
-    ui->noEncrypt->show();
+    ui->yesEncrypt   ->show();
+    ui->noEncrypt    ->show();
     ui->progressEncrypt->hide();
-    ui->statusEncrypt->clear();
+    ui->statusEncrypt  ->clear();
 }
 
+// ── ENCRYPT ────────────────────────────────────────────
+
 void MainWindow::on_selectFileEncrypt_clicked() {
-    selectedFileEncrypt = QFileDialog::getOpenFileName(
-      this, tr("Select File to Encrypt")
-    );
-    if (selectedFileEncrypt.isEmpty()) return;
-    ui->statusEncrypt->append("Selected: " + selectedFileEncrypt);
+    QString file = QFileDialog::getOpenFileName(
+      this, tr("Select File to Encrypt"), {}, tr("All Files (*.*)"));
+    if (file.isEmpty()) return;
+    selectedFileEncrypt = file;
+    ui->statusEncrypt->append("Selected: " + file);
     resetQuestionsEncrypt();
 }
 
@@ -67,18 +75,18 @@ void MainWindow::on_yesEncrypt_clicked() {
         return;
     }
     if (!currentEncrypt->check(selectedFileEncrypt)) {
-        QMessageBox::critical(this, tr("Error"),
-            tr("Wrong answer; restarting questions."));
+        QMessageBox::critical(this, tr("Wrong Answer"),
+            tr("Your ‘Yes’ contradicts the file property.\nRestarting."));
         resetQuestionsEncrypt();
         return;
     }
-    keyEncrypt.push_back('1');
+    keyEncrypt += '1';
     currentEncrypt = currentEncrypt->yes;
     ui->questionEncrypt->setText(currentEncrypt->question);
     if (!currentEncrypt->yes && !currentEncrypt->no) {
         ui->questionEncrypt->hide();
-        ui->yesEncrypt->hide();
-        ui->noEncrypt->hide();
+        ui->yesEncrypt   ->hide();
+        ui->noEncrypt    ->hide();
     }
 }
 
@@ -89,48 +97,59 @@ void MainWindow::on_noEncrypt_clicked() {
         return;
     }
     if (currentEncrypt->check(selectedFileEncrypt)) {
-        QMessageBox::critical(this, tr("Error"),
-            tr("Wrong answer; restarting questions."));
+        QMessageBox::critical(this, tr("Wrong Answer"),
+            tr("Your ‘No’ contradicts the file property.\nRestarting."));
         resetQuestionsEncrypt();
         return;
     }
-    keyEncrypt.push_back('0');
+    keyEncrypt += '0';
     currentEncrypt = currentEncrypt->no;
     ui->questionEncrypt->setText(currentEncrypt->question);
     if (!currentEncrypt->yes && !currentEncrypt->no) {
         ui->questionEncrypt->hide();
-        ui->yesEncrypt->hide();
-        ui->noEncrypt->hide();
+        ui->yesEncrypt   ->hide();
+        ui->noEncrypt    ->hide();
     }
 }
 
 void MainWindow::on_encryptButton_clicked() {
     if (selectedFileEncrypt.isEmpty()) {
         QMessageBox::warning(this, tr("Warning"),
-                             tr("Select a file first."));
+                             tr("Please select a file first."));
         return;
     }
+    if (currentEncrypt->yes || currentEncrypt->no) {
+        QMessageBox::warning(this, tr("Incomplete"),
+            tr("Answer all questions before encrypting."));
+        return;
+    }
+
     QString savePath = QFileDialog::getSaveFileName(
       this, tr("Save Encrypted File As"),
-      selectedFileEncrypt + ".enc"
+      selectedFileEncrypt + ".enc",
+      tr("Encrypted Files (*.enc);;All Files (*.*)")
     );
     if (savePath.isEmpty()) return;
 
     ui->progressEncrypt->show();
-    ui->progressEncrypt->setRange(0, 0);
-    Encryptor enc(keyEncrypt);
-    enc.encryptFile(selectedFileEncrypt.toStdString(),
-                    savePath.toStdString());
-    ui->progressEncrypt->setRange(0, 1);
+    ui->progressEncrypt->setRange(0,0);
+    ui->statusEncrypt->append("Encrypting…");
+
+    Encryptor xorEnc(keyEncrypt.toStdString());
+    xorEnc.encryptFile(
+      selectedFileEncrypt.toStdString(),
+      savePath.toStdString()
+    );
+
+    ui->progressEncrypt->setRange(0,1);
     ui->statusEncrypt->append("Done: " + savePath);
 }
 
-// ─── DECRYPTION ─────────────────────────────────────────────────
+// ── DECRYPT ────────────────────────────────────────────
 
 void MainWindow::on_selectFileDecrypt_clicked() {
     selectedFileDecrypt = QFileDialog::getOpenFileName(
-      this, tr("Select File to Decrypt"), "", tr("*.enc")
-    );
+      this, tr("Select File to Decrypt"), {}, tr("Encrypted Files (*.enc)"));
     if (selectedFileDecrypt.isEmpty()) return;
     ui->statusDecrypt->append("Selected: " + selectedFileDecrypt);
 }
@@ -141,71 +160,82 @@ void MainWindow::on_decryptButton_clicked() {
                              tr("Please select a file first."));
         return;
     }
-
-    // Use QFileInfo to extract directory and base name (without all extensions)
     QFileInfo fi(selectedFileDecrypt);
-    QString baseName = fi.completeBaseName();           // “file.txt” from “file.txt.enc”
-    QString initialPath = fi.absolutePath() + "/" + baseName;
-
-    // Suggest the original filename (minus “.enc”) in the save dialog
+    QString base = fi.completeBaseName();
     QString savePath = QFileDialog::getSaveFileName(
-        this,
-        tr("Save Decrypted File As"),
-        initialPath,
-        tr("All Files (*.*)")
+      this, tr("Save Decrypted File As"),
+      fi.absolutePath() + "/" + base,
+      tr("All Files (*.*)")
     );
     if (savePath.isEmpty()) return;
 
     ui->progressDecrypt->show();
-    ui->progressDecrypt->setRange(0, 0);
-    ui->statusDecrypt->append(tr("Decrypting to: %1").arg(savePath));
+    ui->progressDecrypt->setRange(0,0);
+    ui->statusDecrypt->append("Decrypting…");
 
-    Encryptor enc("");  // key read from header
-    enc.decryptFile(
-        selectedFileDecrypt.toStdString(),
-        savePath.toStdString()
+    Encryptor xorDec("");
+    xorDec.decryptFile(
+      selectedFileDecrypt.toStdString(),
+      savePath.toStdString()
     );
 
-    ui->progressDecrypt->setRange(0, 1);
-    ui->statusDecrypt->append(
-        tr("Done! Saved to %1").arg(savePath)
-    );
+    ui->progressDecrypt->setRange(0,1);
+    ui->statusDecrypt->append("Done: " + savePath);
 }
 
-// ─── COMPARISON ─────────────────────────────────────────────────
+// ── COMPARE ────────────────────────────────────────────
 
 void MainWindow::on_selectFileCompare_clicked() {
     compareFile = QFileDialog::getOpenFileName(
-      this, tr("Select File for Comparison")
-    );
+      this, tr("Select File for Comparison"), {}, tr("All Files (*.*)"));
     if (compareFile.isEmpty()) return;
-    QFileInfo info(compareFile);
-    ui->filePathCompare->setText(info.absoluteFilePath());
-    ui->fileSizeCompare->setText(QString::number(info.size()) + " bytes");
+    QFileInfo fi(compareFile);
+    ui->filePathCompare->setText(fi.fileName());
+    ui->fileSizeCompare->setText(
+      QString::number(fi.size()/1024.0,'f',1) + " KB");
+    ui->compareTable->hide();
 }
 
 void MainWindow::on_runCompare_clicked() {
     if (compareFile.isEmpty()) {
         QMessageBox::warning(this, tr("Warning"),
-                             tr("Select a file first."));
+                             tr("Please select a file first."));
         return;
     }
-    QElapsedTimer timer; timer.start();
-    Encryptor enc("101");
-    std::string in = compareFile.toStdString();
-    std::string tmp = in + ".tmp";
-    enc.encryptFile(in, tmp);
-    qint64 xorMs = timer.elapsed();
-    QFile::remove(QString::fromStdString(tmp));
 
-    qint64 rsaMs = xorMs * 5;  // crude estimate
+    QElapsedTimer t; t.start();
+    QString tmpXorEnc = QDir::temp().filePath("cmp_xor.enc");
+    QString tmpXorDec = QDir::temp().filePath("cmp_xor.dec");
+    Encryptor xorEnc("0");
+    xorEnc.encryptFile(compareFile.toStdString(), tmpXorEnc.toStdString());
+    qint64 xorEncMs = t.elapsed();
+    t.restart();
+    xorEnc.decryptFile(tmpXorEnc.toStdString(), tmpXorDec.toStdString());
+    qint64 xorDecMs = t.elapsed();
+    QFile::remove(tmpXorEnc);
+    QFile::remove(tmpXorDec);
 
-    ui->compareTable->setItem(0, 0,
-        new QTableWidgetItem("Decision-Tree XOR"));
-    ui->compareTable->setItem(0, 1,
-        new QTableWidgetItem(QString::number(xorMs)));
-    ui->compareTable->setItem(1, 0,
-        new QTableWidgetItem("RSA (est.)"));
-    ui->compareTable->setItem(1, 1,
-        new QTableWidgetItem(QString::number(rsaMs)));
+    QString tmpArEnc = QDir::temp().filePath("cmp_ar.enc");
+    QString tmpArDec = QDir::temp().filePath("cmp_ar.dec");
+    double arEncMs = hybridEncrypt(
+      compareFile.toStdString(),
+      tmpArEnc.toStdString(),
+      "keys/public.pem"
+    );
+    double arDecMs = hybridDecrypt(
+      tmpArEnc.toStdString(),
+      tmpArDec.toStdString(),
+      "keys/private.pem"
+    );
+    QFile::remove(tmpArEnc);
+    QFile::remove(tmpArDec);
+
+    ui->compareTable->item(0,0)->setText("XOR");
+    ui->compareTable->item(0,1)->setText(QString::number(xorEncMs));
+    ui->compareTable->item(0,2)->setText(QString::number(xorDecMs));
+    ui->compareTable->item(1,0)->setText("AES+RSA");
+    ui->compareTable->item(1,1)->setText(QString::number(arEncMs,'f',1));
+    ui->compareTable->item(1,2)->setText(QString::number(arDecMs,'f',1));
+
+    ui->compareTable->show();
 }

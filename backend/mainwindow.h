@@ -3,8 +3,15 @@
 
 #include <QMainWindow>
 #include <QString>
-#include "Tree.h"
-#include "Encryptor.h"
+#include <QElapsedTimer>
+#include <QFile>
+#include <QDir>
+#include <QFileInfo>
+#include <QTableWidget>
+
+#include "Tree.h"       // DecisionTree, Node
+#include "Encryptor.h"  // XOR encrypt/decrypt
+#include "Crypto.h"     // hybridEncrypt/hybridDecrypt
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -18,36 +25,35 @@ public:
     ~MainWindow() override;
 
 private slots:
-    // Encrypt tab slots
+    // ── Encryption
     void on_selectFileEncrypt_clicked();
     void on_yesEncrypt_clicked();
     void on_noEncrypt_clicked();
     void on_encryptButton_clicked();
 
-    // Decrypt tab slots
+    // ── Decryption
     void on_selectFileDecrypt_clicked();
     void on_decryptButton_clicked();
 
-    // Compare tab slots
+    // ── Comparison
     void on_selectFileCompare_clicked();
     void on_runCompare_clicked();
 
 private:
     Ui::MainWindow *ui;
 
-    // Encryption state
+    // ── Encrypt state
     DecisionTree treeEncrypt;
-    Node* currentEncrypt;
-    std::string keyEncrypt;
-    QString selectedFileEncrypt;
+    Node*        currentEncrypt = nullptr;
+    QString      selectedFileEncrypt;
+    QString      keyEncrypt;
+    void         resetQuestionsEncrypt();
 
-    // Decryption state
+    // ── Decrypt state
     QString selectedFileDecrypt;
 
-    // Comparison state
+    // ── Compare state
     QString compareFile;
-
-    void resetQuestionsEncrypt();
 };
 
 #endif // MAINWINDOW_H
