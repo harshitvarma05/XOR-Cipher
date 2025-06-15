@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Secure File Encryptor</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+    <h1>Secure File Encryptor</h1>
+    <nav class="tabs">
+        <button data-tab="encrypt" class="tab-btn active">Encrypt</button>
+        <button data-tab="decrypt" class="tab-btn">Decrypt</button>
+        <button data-tab="compare" class="tab-btn">Compare</button>
+    </nav>
+</header>
+<main>
+    <!-- Encrypt Panel -->
+    <section id="encrypt" class="panel active">
+        <div id="dropZoneEncrypt" class="drop-zone">
+            <p>Drag &amp; drop or click to select file</p>
+            <input type="file" id="fileEncrypt">
+        </div>
+        <div id="fileInfoEncrypt" class="file-info">No file selected</div>
+        <div id="questionHeader" class="question-header hidden"></div>
+        <div id="questions" class="questions"></div>
+        <button id="goEncrypt" class="action-btn" disabled>Encrypt &amp; Download</button>
+        <div id="loadingBarEncrypt" class="loading-bar hidden"></div>
+        <div class="status"><span id="statusTextEncrypt"></span></div>
+    </section>
+
+    <!-- Decrypt Panel -->
+    <section id="decrypt" class="panel">
+        <div id="dropZoneDecrypt" class="drop-zone">
+            <p>Drag &amp; drop or click to select .enc file</p>
+            <input type="file" id="fileDecrypt">
+        </div>
+        <div id="fileInfoDecrypt" class="file-info">No file selected</div>
+        <button id="goDecrypt" class="action-btn" disabled>Decrypt &amp; Download</button>
+        <div id="loadingBarDecrypt" class="loading-bar hidden"></div>
+        <div class="status"><span id="statusTextDecrypt"></span></div>
+    </section>
+
+    <section id="compare" class="panel">
+        <div id="dropZoneCompare" class="drop-zone">
+            <p>Drag &amp; drop or click to select file</p>
+            <input type="file" id="fileCompare">
+        </div>
+        <div id="fileInfoCompare" class="file-info">No file selected</div>
+        <button id="goCompare" class="action-btn" disabled>Run Comparison</button>
+        <div id="loadingBarCompare" class="loading-bar hidden"></div>
+
+        <table id="compareTable" class="compare-table hidden">
+            <thead>
+            <tr>
+                <th>Algorithm</th>
+                <th>Keygen (ms)</th>
+                <th>Encrypt (ms)</th>
+                <th>Decrypt (ms)</th>
+                <th>Total (ms)</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>XOR</td>
+                <td>–</td>
+                <td id="xorEnc">–</td>
+                <td id="xorDec">–</td>
+                <td id="xorTotal">–</td>
+            </tr>
+            <tr>
+                <td>AES+RSA</td>
+                <td id="rsaKeygen">–</td>
+                <td id="rsaEnc">–</td>
+                <td id="rsaDec">–</td>
+                <td id="rsaTotal">–</td>
+            </tr>
+            </tbody>
+        </table>
+        <span id="statusTextCompare" class="file-info"></span>
+    </section>
+</main>
+
+<button id="themeToggle" class="theme-toggle" title="Toggle Theme">🌙</button>
+<script src="script.js"></script>
+</body>
+</html>
