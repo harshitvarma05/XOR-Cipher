@@ -1,7 +1,3 @@
-// -------------------------------------------------
-// script.js — full application logic
-// -------------------------------------------------
-
 // Theme Toggle
 const themeToggle = document.getElementById('themeToggle');
 const savedTheme  = localStorage.getItem('theme') || 'light';
@@ -14,17 +10,16 @@ themeToggle.addEventListener('click', () => {
     themeToggle.textContent = next === 'dark' ? '☀️' : '🌙';
 });
 
-// Generic Tab Switching (now handles Encrypt/Decrypt/Compare/About)
+// Tab Switching
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-        // deactivate all tabs
         document.querySelectorAll('.tab-btn').forEach(b => {
             b.classList.remove('active');
             b.setAttribute('aria-selected','false');
-            document.getElementById(b.dataset.tab).classList.remove('active');
-            document.getElementById(b.dataset.tab).hidden = true;
+            const p = document.getElementById(b.dataset.tab);
+            p.classList.remove('active');
+            p.hidden = true;
         });
-        // activate this tab
         btn.classList.add('active');
         btn.setAttribute('aria-selected','true');
         const panel = document.getElementById(btn.dataset.tab);
@@ -33,7 +28,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     });
 });
 
-// Decision‐Tree Definition (same as before)
+// Decision Tree
 const decisionTree = {
     question: "Is file size > 100 KB?",
     check: f => f.size > 100 * 1024,
@@ -49,9 +44,9 @@ const decisionTree = {
     }
 };
 
-// Drag & Drop File Selector Helper
+// Drag & Drop Helper
 function setupDropZone(zoneId, inputId, callback) {
-    const zone = document.getElementById(zoneId),
+    const zone  = document.getElementById(zoneId),
         input = document.getElementById(inputId);
 
     ['dragover'].forEach(evt =>
@@ -74,7 +69,7 @@ function setupDropZone(zoneId, inputId, callback) {
     });
 }
 
-// ── ENCRYPTION FLOW ─────────────────────────────────────────────
+// ── ENCRYPT FLOW ──────────────────────────────────────────────
 let encFile, encNode, encKey = '';
 const qsE    = document.getElementById('questions'),
     qhE    = document.getElementById('questionHeader'),
@@ -102,13 +97,10 @@ function renderEncryptQ() {
         btnE.disabled = false;
         return;
     }
-    qhE.textContent = `Question ${encKey.length + 1} of 2`;
-    const div = document.createElement('div');
-    div.className = 'question';
-    const p   = document.createElement('p');
-    p.textContent = encNode.question;
-    const btns = document.createElement('div');
-    btns.className = 'answer-buttons';
+    qhE.textContent = `Question ${encKey.length+1} of 2`;
+    const div = document.createElement('div'); div.className = 'question';
+    const p   = document.createElement('p');     p.textContent = encNode.question;
+    const btns= document.createElement('div');   btns.className = 'answer-buttons';
     ['Yes','No'].forEach(txt => {
         const b = document.createElement('button');
         b.textContent = txt;
@@ -121,22 +113,24 @@ function renderEncryptQ() {
 }
 
 function answerEncrypt(isYes) {
-    if ((isYes && !encNode.check(encFile)) ||
-        (!isYes &&  encNode.check(encFile))) {
-        alert('Wrong answer—restarting questions.');
+    if ((isYes && !encNode.check(encFile)) || (!isYes && encNode.check(encFile))) {
+        alert('Wrong answer—starting over.');
         encNode = decisionTree;
         encKey  = '';
         renderEncryptQ();
         return;
     }
-    encKey += isYes ? '1' : '0';
+    encKey  += isYes ? '1' : '0';
     encNode  = isYes ? encNode.yes : encNode.no;
     renderEncryptQ();
 }
 
 btnE.addEventListener('click', async () => {
     statE.textContent = '';
+    // REMOVE 'hidden' class to lift !important rule, then explicitly show
     loadE.classList.remove('hidden');
+    loadE.style.display = 'block';
+
     try {
         const fd  = new FormData();
         fd.append('file', encFile);
@@ -155,11 +149,11 @@ btnE.addEventListener('click', async () => {
         statE.textContent = 'Error: ' + err.message;
         console.error(err);
     } finally {
-        loadE.classList.add('hidden');
+        loadE.style.display = 'none';
     }
 });
 
-// ── DECRYPTION FLOW ─────────────────────────────────────────────
+// ── DECRYPT FLOW ──────────────────────────────────────────────
 let decFile;
 const btnD   = document.getElementById('goDecrypt'),
     loadD  = document.getElementById('loadingBarDecrypt'),
@@ -176,6 +170,8 @@ setupDropZone('dropZoneDecrypt','fileDecrypt', file => {
 btnD.addEventListener('click', async () => {
     statD.textContent = '';
     loadD.classList.remove('hidden');
+    loadD.style.display = 'block';
+
     try {
         const fd  = new FormData();
         fd.append('file', decFile);
@@ -199,11 +195,11 @@ btnD.addEventListener('click', async () => {
         statD.textContent = 'Error: ' + err.message;
         console.error(err);
     } finally {
-        loadD.classList.add('hidden');
+        loadD.style.display = 'none';
     }
 });
 
-// ── COMPARISON FLOW ─────────────────────────────────────────────
+// ── COMPARISON FLOW ──────────────────────────────────────────────
 let cmpFile;
 const btnC   = document.getElementById('goCompare'),
     loadC  = document.getElementById('loadingBarCompare'),
@@ -230,6 +226,8 @@ btnC.addEventListener('click', async () => {
     btnC.disabled     = true;
     statC.textContent = '';
     loadC.classList.remove('hidden');
+    loadC.style.display = 'block';
+
     try {
         const fd  = new FormData();
         fd.append('file', cmpFile);
@@ -257,7 +255,7 @@ btnC.addEventListener('click', async () => {
         statC.textContent = 'Error: ' + err.message;
         console.error(err);
     } finally {
-        loadC.classList.add('hidden');
-        btnC.disabled = false;
+        loadC.style.display = 'none';
+        btnC.disabled       = false;
     }
 });

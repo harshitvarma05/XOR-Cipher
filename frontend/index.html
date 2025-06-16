@@ -91,67 +91,44 @@
 
         <h3>Overview & Objectives</h3>
         <p>
-            This tool introduces <strong>Decision-Path Encoding</strong> for lightweight symmetric encryption:
-            • Derive an XOR key via an interactive decision tree on file properties.
-            • Embed original extension metadata and key length directly in the encrypted file header.
+            This tool introduces <strong>Decision-Path Encoding</strong> for lightweight symmetric encryption:<br>
+            • Derive an XOR key via an interactive decision tree on file properties.<br>
+            • Embed original extension metadata and key length in the encrypted header.<br>
             • Compare performance against a hybrid AES+RSA approach to quantify trade-offs.
         </p>
 
         <h3>Algorithm & Rationale</h3>
         <ul>
-            <li><strong>Decision Tree Keygen</strong>:
-                <ul>
-                    <li>Questions on file size, extension, name → 2-bit key.</li>
-                    <li>Time Complexity: O(1) for keygen (constant questions).</li>
-                </ul>
-            </li>
-            <li><strong>XOR Encryption</strong>:
-                <ul>
-                    <li>Single-pass XOR over file bytes → O(n).</li>
-                </ul>
-            </li>
-            <li><strong>AES+RSA Hybrid</strong>:
-                <ul>
-                    <li>AES symmetric lock (O(n)), RSA wraps AES key (≈O(k³)).</li>
-                </ul>
-            </li>
+            <li><strong>Decision Tree Keygen</strong> (constant, 2 questions → 2-bit key)</li>
+            <li><strong>XOR Encryption</strong> (single-pass over n bytes → O(n))</li>
+            <li><strong>AES+RSA Hybrid</strong> (AES O(n); RSA key wrap O(k³))</li>
         </ul>
 
         <h3>Program Structure</h3>
         <ol>
-            <li><strong>C++ & Qt6 GUI</strong>
-                • File dialogs, progress bars, decision-tree widget.
-            </li>
-            <li><strong>Node.js + Express Backend</strong>
-                • Bridges JS frontend to compiled SecureFileEncryptionQt.exe for all ops.
-            </li>
-            <li><strong>Vanilla JavaScript Frontend</strong>
-                • Drag-drop zones, pill-style tabs, smooth loading bars, interactive Q&A.
-            </li>
+            <li><strong>C++ &amp; Qt6 GUI:</strong> Desktop dialogs & progress bars.</li>
+            <li><strong>Node.js &amp; Express:</strong> Backend bridge to C++ executable.</li>
+            <li><strong>Vanilla JS Frontend:</strong> Drag-drop, pill tabs, Q&amp;A UI.</li>
         </ol>
 
         <h3>Comparison & Metrics</h3>
         <p>
-            • <strong>XOR</strong>: minimal keygen time (≈0 ms), encrypt/decrypt ~O(n).<br/>
-            • <strong>AES+RSA</strong>: keygen (RSA keygen + AES key wrap), encryption, decryption measured individually.
-        </p>
-        <p>
-            Runtime measurements include key generation, encryption, and decryption phases to ensure apples-to-apples comparison.
+            • <strong>XOR:</strong> ~0 ms keygen, encrypt/decrypt ~O(n).<br>
+            • <strong>AES+RSA:</strong> measures keygen, encrypt, decrypt separately.<br>
+            All timings include key generation for a fair apples-to-apples comparison.
         </p>
 
-        <h3>Technologies & Frameworks</h3>
+        <h3>Tech Stack</h3>
         <ul>
-            <li><strong>C++17 & Qt6</strong> for desktop cross-platform UI.</li>
-            <li><strong>OpenSSL (via vcpkg)</strong> for AES+RSA crypto in C++.</li>
-            <li><strong>Node.js + Express</strong> as lightweight bridge API.</li>
-            <li><strong>HTML5, CSS3, Vanilla JS</strong>—Apple HIG–inspired web frontend.</li>
+            <li>C++17, Qt6, OpenSSL (vcpkg)</li>
+            <li>Node.js, Express</li>
+            <li>HTML5, CSS3, Vanilla JS (Apple HIG–inspired)</li>
         </ul>
 
-        <h3>Real-World Applications</h3>
+        <h3>Use Cases</h3>
         <ul>
-            <li>Quick file scrambling where full PKI is overkill.</li>
-            <li>Embedded systems needing minimal user interaction.</li>
-            <li>Educational demos comparing symmetric vs. hybrid crypto.</li>
+            <li>Lightweight file scrambling where full PKI is overkill</li>
+            <li>Embedded systems or demos comparing symmetric vs. hybrid crypto</li>
         </ul>
     </section>
 </main>
