@@ -1,265 +1,263 @@
+// -------------------------------------------------
+// script.js — full application logic
+// -------------------------------------------------
 
+// Theme Toggle
 const themeToggle = document.getElementById('themeToggle');
 const savedTheme  = localStorage.getItem('theme') || 'light';
 document.documentElement.setAttribute('data-theme', savedTheme);
 themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
 themeToggle.addEventListener('click', () => {
-    const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', t);
-    localStorage.setItem('theme', t);
-    themeToggle.textContent = t === 'dark' ? '☀️' : '🌙';
+    const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+    themeToggle.textContent = next === 'dark' ? '☀️' : '🌙';
 });
 
+// Generic Tab Switching (now handles Encrypt/Decrypt/Compare/About)
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        // deactivate all tabs
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected','false');
+            document.getElementById(b.dataset.tab).classList.remove('active');
+            document.getElementById(b.dataset.tab).hidden = true;
+        });
+        // activate this tab
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected','true');
+        const panel = document.getElementById(btn.dataset.tab);
+        panel.classList.add('active');
+        panel.hidden = false;
+    });
+});
+
+// Decision‐Tree Definition (same as before)
 const decisionTree = {
     question: "Is file size > 100 KB?",
     check: f => f.size > 100 * 1024,
     yes: {
         question: "Does filename start with a vowel?",
         check: f => /^[AEIOUaeiou]/.test(f.name),
-        yes: null,
-        no: null
+        yes: null, no: null
     },
     no: {
-        question: "Is file extension .txt?",
+        question: "Is extension .txt?",
         check: f => f.name.toLowerCase().endsWith('.txt'),
-        yes: null,
-        no: null
+        yes: null, no: null
     }
 };
 
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-        document.getElementById(btn.dataset.tab).classList.add('active');
-    });
-});
-
-function setupDropZone(zoneId, inputId, onFile) {
+// Drag & Drop File Selector Helper
+function setupDropZone(zoneId, inputId, callback) {
     const zone = document.getElementById(zoneId),
-        inp  = document.getElementById(inputId);
+        input = document.getElementById(inputId);
 
-    zone.addEventListener('dragover', e => {
-        e.preventDefault();
-        zone.classList.add('dragover');
-    });
-
-    zone.addEventListener('dragleave', () => {
-        zone.classList.remove('dragover');
-    });
-
+    ['dragover'].forEach(evt =>
+        zone.addEventListener(evt, e => {
+            e.preventDefault();
+            zone.classList.add('dragover');
+        })
+    );
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
     zone.addEventListener('drop', e => {
         e.preventDefault();
         zone.classList.remove('dragover');
         if (e.dataTransfer.files.length) {
-            inp.files = e.dataTransfer.files;
-            inp.dispatchEvent(new Event('change'));
+            input.files = e.dataTransfer.files;
+            input.dispatchEvent(new Event('change'));
         }
     });
-
-    inp.addEventListener('change', () => {
-        if (inp.files.length) onFile(inp.files[0]);
+    input.addEventListener('change', () => {
+        if (input.files.length) callback(input.files[0]);
     });
 }
 
-let encFile = null, encNode = null, encKey = '';
-const questions      = document.getElementById('questions'),
-    questionHeader = document.getElementById('questionHeader'),
-    goE            = document.getElementById('goEncrypt'),
-    loadE          = document.getElementById('loadingBarEncrypt'),
-    statusE        = document.getElementById('statusTextEncrypt'),
-    infoE          = document.getElementById('fileInfoEncrypt');
+// ── ENCRYPTION FLOW ─────────────────────────────────────────────
+let encFile, encNode, encKey = '';
+const qsE    = document.getElementById('questions'),
+    qhE    = document.getElementById('questionHeader'),
+    btnE   = document.getElementById('goEncrypt'),
+    loadE  = document.getElementById('loadingBarEncrypt'),
+    statE  = document.getElementById('statusTextEncrypt'),
+    infoE  = document.getElementById('fileInfoEncrypt');
 
-setupDropZone('dropZoneEncrypt','fileEncrypt', f => {
-    encFile = f;
+setupDropZone('dropZoneEncrypt','fileEncrypt', file => {
+    encFile = file;
     encNode = decisionTree;
     encKey  = '';
-    infoE.textContent = `${f.name} (${(f.size/1024).toFixed(1)} KB)`;
-    questions.innerHTML = '';
-    questionHeader.classList.remove('hidden');
-    goE.disabled = true;
-    statusE.textContent = '';
-    renderQuestion();
+    infoE.textContent = `${file.name} — ${(file.size/1024).toFixed(1)} KB`;
+    qsE.innerHTML     = '';
+    qhE.classList.remove('hidden');
+    btnE.disabled     = true;
+    statE.textContent = '';
+    renderEncryptQ();
 });
 
-function renderQuestion() {
-    questions.innerHTML = '';
+function renderEncryptQ() {
+    qsE.innerHTML = '';
     if (!encNode || !encNode.question) {
-        questionHeader.classList.add('hidden');
-        goE.disabled = false;
+        qhE.classList.add('hidden');
+        btnE.disabled = false;
         return;
     }
-    questionHeader.textContent = `Question ${encKey.length+1} of 2`;
-
+    qhE.textContent = `Question ${encKey.length + 1} of 2`;
     const div = document.createElement('div');
     div.className = 'question';
-
-    const p = document.createElement('p');
+    const p   = document.createElement('p');
     p.textContent = encNode.question;
-    div.appendChild(p);
-
     const btns = document.createElement('div');
     btns.className = 'answer-buttons';
     ['Yes','No'].forEach(txt => {
         const b = document.createElement('button');
         b.textContent = txt;
-        b.addEventListener('click', () => answer(txt === 'Yes'));
+        b.addEventListener('click', () => answerEncrypt(txt === 'Yes'));
         btns.appendChild(b);
     });
+    div.appendChild(p);
     div.appendChild(btns);
-    questions.appendChild(div);
+    qsE.appendChild(div);
 }
 
-function answer(isYes) {
-    if ((isYes && !encNode.check(encFile)) || (!isYes && encNode.check(encFile))) {
-        alert('Incorrect—restarting.');
+function answerEncrypt(isYes) {
+    if ((isYes && !encNode.check(encFile)) ||
+        (!isYes &&  encNode.check(encFile))) {
+        alert('Wrong answer—restarting questions.');
         encNode = decisionTree;
         encKey  = '';
-        renderQuestion();
+        renderEncryptQ();
         return;
     }
     encKey += isYes ? '1' : '0';
-    encNode = isYes ? encNode.yes : encNode.no;
-    renderQuestion();
+    encNode  = isYes ? encNode.yes : encNode.no;
+    renderEncryptQ();
 }
 
-goE.addEventListener('click', async () => {
-    statusE.textContent = '';
+btnE.addEventListener('click', async () => {
+    statE.textContent = '';
     loadE.classList.remove('hidden');
     try {
-        const fd = new FormData();
+        const fd  = new FormData();
         fd.append('file', encFile);
-        fd.append('key', encKey);
+        fd.append('key',  encKey);
         const res = await fetch('/encrypt', { method:'POST', body:fd });
-        if (!res.ok) throw new Error(`Server ${res.status}`);
-        const blob = await res.blob();
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
+        if (!res.ok) throw new Error(res.statusText);
+        const blob = await res.blob(),
+            url  = URL.createObjectURL(blob),
+            a    = document.createElement('a');
         a.href     = url;
         a.download = `${encFile.name}.enc`;
         a.click();
         URL.revokeObjectURL(url);
-        statusE.textContent = 'Encrypted!';
-    } catch(err) {
+        statE.textContent = '✅ Encryption complete';
+    } catch (err) {
+        statE.textContent = 'Error: ' + err.message;
         console.error(err);
-        statusE.textContent = 'Error: ' + err.message;
     } finally {
         loadE.classList.add('hidden');
     }
 });
 
-let decFile = null;
-const goD     = document.getElementById('goDecrypt'),
-    loadD   = document.getElementById('loadingBarDecrypt'),
-    statusD = document.getElementById('statusTextDecrypt'),
-    infoD   = document.getElementById('fileInfoDecrypt');
+// ── DECRYPTION FLOW ─────────────────────────────────────────────
+let decFile;
+const btnD   = document.getElementById('goDecrypt'),
+    loadD  = document.getElementById('loadingBarDecrypt'),
+    statD  = document.getElementById('statusTextDecrypt'),
+    infoD  = document.getElementById('fileInfoDecrypt');
 
-setupDropZone('dropZoneDecrypt','fileDecrypt', f => {
-    decFile = f;
-    infoD.textContent = `${f.name} (${(f.size/1024).toFixed(1)} KB)`;
-    goD.disabled = false;
-    statusD.textContent = '';
+setupDropZone('dropZoneDecrypt','fileDecrypt', file => {
+    decFile = file;
+    infoD.textContent = `${file.name} — ${(file.size/1024).toFixed(1)} KB`;
+    btnD.disabled     = false;
+    statD.textContent = '';
 });
 
-goD.addEventListener('click', async () => {
-    statusD.textContent = '';
+btnD.addEventListener('click', async () => {
+    statD.textContent = '';
     loadD.classList.remove('hidden');
     try {
         const fd  = new FormData();
         fd.append('file', decFile);
         const res = await fetch('/decrypt', { method:'POST', body:fd });
-        if (!res.ok) throw new Error(`Server ${res.status}`);
-        const blob = await res.blob();
-        let name = decFile.name.replace(/\.enc$/i,'');
-        const cd = res.headers.get('Content-Disposition');
+        if (!res.ok) throw new Error(res.statusText);
+        const blob = await res.blob(),
+            cd   = res.headers.get('Content-Disposition');
+        let filename = decFile.name.replace(/\.enc$/i, '');
         if (cd) {
             const m = cd.match(/filename="([^"]+)"/);
-            if (m) name = m[1];
+            if (m) filename = m[1];
         }
-        const url = URL.createObjectURL(blob);
-        const a   = document.createElement('a');
+        const url = URL.createObjectURL(blob),
+            a   = document.createElement('a');
         a.href     = url;
-        a.download = name;
+        a.download = filename;
         a.click();
         URL.revokeObjectURL(url);
-        statusD.textContent = 'Decrypted!';
-    } catch(err) {
+        statD.textContent = '✅ Decryption complete';
+    } catch (err) {
+        statD.textContent = 'Error: ' + err.message;
         console.error(err);
-        statusD.textContent = 'Error: ' + err.message;
     } finally {
         loadD.classList.add('hidden');
     }
 });
 
-let cmpFile = null;
-const dropZoneCompare  = 'dropZoneCompare';
-const fileInputCompare = 'fileCompare';
-const infoC            = document.getElementById('fileInfoCompare');
-const goC              = document.getElementById('goCompare');
-const loadC            = document.getElementById('loadingBarCompare');
-const statusC          = document.getElementById('statusTextCompare');
-const tblCompare       = document.getElementById('compareTable');
-const xorEncCell       = document.getElementById('xorEnc');
-const xorDecCell       = document.getElementById('xorDec');
-const xorTotalCell     = document.getElementById('xorTotal');
-const rsaKeygenCell    = document.getElementById('rsaKeygen');
-const rsaEncCell       = document.getElementById('rsaEnc');
-const rsaDecCell       = document.getElementById('rsaDec');
-const rsaTotalCell     = document.getElementById('rsaTotal');
+// ── COMPARISON FLOW ─────────────────────────────────────────────
+let cmpFile;
+const btnC   = document.getElementById('goCompare'),
+    loadC  = document.getElementById('loadingBarCompare'),
+    statC  = document.getElementById('statusTextCompare'),
+    infoC  = document.getElementById('fileInfoCompare'),
+    tbl    = document.getElementById('compareTable'),
+    xorEnc = document.getElementById('xorEnc'),
+    xorDec = document.getElementById('xorDec'),
+    xorTot = document.getElementById('xorTotal'),
+    rsaKey = document.getElementById('rsaKeygen'),
+    rsaEnc = document.getElementById('rsaEnc'),
+    rsaDec = document.getElementById('rsaDec'),
+    rsaTot = document.getElementById('rsaTotal');
 
-setupDropZone(dropZoneCompare, fileInputCompare, file => {
+setupDropZone('dropZoneCompare','fileCompare', file => {
     cmpFile = file;
-    infoC.textContent = `${file.name} (${(file.size/1024).toFixed(1)} KB)`;
-    goC.disabled = false;
-    statusC.textContent = '';
-    tblCompare.classList.add('hidden');
+    infoC.textContent = `${file.name} — ${(file.size/1024).toFixed(1)} KB`;
+    btnC.disabled     = false;
+    statC.textContent = '';
+    tbl.classList.add('hidden');
 });
 
-goC.addEventListener('click', async () => {
-    if (!cmpFile) return;
-    goC.disabled = true;
+btnC.addEventListener('click', async () => {
+    btnC.disabled     = true;
+    statC.textContent = '';
     loadC.classList.remove('hidden');
-    statusC.textContent = '';
-
     try {
-        const fd = new FormData();
+        const fd  = new FormData();
         fd.append('file', cmpFile);
-
-        const res = await fetch('/compare', {
-            method: 'POST',
-            body: fd
-        });
-        if (!res.ok) throw new Error(`Server ${res.status}`);
-
+        const res = await fetch('/compare', { method:'POST', body:fd });
+        if (!res.ok) throw new Error(res.statusText);
         const {
-            xorEncMs,
-            xorDecMs,
-            aesrsaKeygenMs,
-            aesrsaEncMs,
-            aesrsaDecMs
+            xorEncMs, xorDecMs,
+            aesrsaKeygenMs, aesrsaEncMs, aesrsaDecMs
         } = await res.json();
 
-       
         const xorTotal = xorEncMs + xorDecMs;
         const rsaTotal = aesrsaKeygenMs + aesrsaEncMs + aesrsaDecMs;
 
-       
-        xorEncCell.textContent    = xorEncMs.toFixed(1);
-        xorDecCell.textContent    = xorDecMs.toFixed(1);
-        xorTotalCell.textContent  = xorTotal.toFixed(1);
+        xorEnc.textContent = xorEncMs.toFixed(1);
+        xorDec.textContent = xorDecMs.toFixed(1);
+        xorTot.textContent = xorTotal.toFixed(1);
 
-        rsaKeygenCell.textContent = aesrsaKeygenMs.toFixed(1);
-        rsaEncCell.textContent    = aesrsaEncMs.toFixed(1);
-        rsaDecCell.textContent    = aesrsaDecMs.toFixed(1);
-        rsaTotalCell.textContent  = rsaTotal.toFixed(1);
+        rsaKey.textContent = aesrsaKeygenMs.toFixed(1);
+        rsaEnc.textContent = aesrsaEncMs.toFixed(1);
+        rsaDec.textContent = aesrsaDecMs.toFixed(1);
+        rsaTot.textContent = rsaTotal.toFixed(1);
 
-        tblCompare.classList.remove('hidden');
+        tbl.classList.remove('hidden');
     } catch (err) {
+        statC.textContent = 'Error: ' + err.message;
         console.error(err);
-        statusC.textContent = 'Error: ' + err.message;
     } finally {
         loadC.classList.add('hidden');
-        goC.disabled = false;
+        btnC.disabled = false;
     }
 });
