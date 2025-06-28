@@ -65,12 +65,12 @@ function setupDropZone(zoneId, inputId, callback) {
         }
     });
     input.addEventListener('change', () => {
-        if (input.files.length) callback(input.files[0]);
+        if (input.files.length) callback(input.files);
     });
 }
 
 // ── ENCRYPT FLOW ──────────────────────────────────────────────
-let encFile, encNode, encKey = '';
+let encFiles = [], encNode, encKey = '';
 const qsE    = document.getElementById('questions'),
     qhE    = document.getElementById('questionHeader'),
     btnE   = document.getElementById('goEncrypt'),
@@ -78,11 +78,11 @@ const qsE    = document.getElementById('questions'),
     statE  = document.getElementById('statusTextEncrypt'),
     infoE  = document.getElementById('fileInfoEncrypt');
 
-setupDropZone('dropZoneEncrypt','fileEncrypt', file => {
-    encFile = file;
+setupDropZone('dropZoneEncrypt','fileEncrypt', files => {
+    encFiles = Array.from(files);
     encNode = decisionTree;
     encKey  = '';
-    infoE.textContent = `${file.name} — ${(file.size/1024).toFixed(1)} KB`;
+    infoE.textContent = `${encFiles.length} file(s) selected`;
     qsE.innerHTML     = '';
     qhE.classList.remove('hidden');
     btnE.disabled     = true;
@@ -113,7 +113,7 @@ function renderEncryptQ() {
 }
 
 function answerEncrypt(isYes) {
-    if ((isYes && !encNode.check(encFile)) || (!isYes && encNode.check(encFile))) {
+    if (encFiles.some(file => (isYes && !encNode.check(file)) || (!isYes && encNode.check(file)))) {
         alert('Wrong answer—starting over.');
         encNode = decisionTree;
         encKey  = '';
@@ -127,135 +127,28 @@ function answerEncrypt(isYes) {
 
 btnE.addEventListener('click', async () => {
     statE.textContent = '';
-    // REMOVE 'hidden' class to lift !important rule, then explicitly show
     loadE.classList.remove('hidden');
     loadE.style.display = 'block';
 
     try {
         const fd  = new FormData();
-        fd.append('file', encFile);
+        encFiles.forEach(file => fd.append('files', file));
         fd.append('key',  encKey);
-        const res = await fetch('/encrypt', { method:'POST', body:fd });
+
+        const res = await fetch('/encrypt-multi', { method:'POST', body:fd });
         if (!res.ok) throw new Error(res.statusText);
         const blob = await res.blob(),
             url  = URL.createObjectURL(blob),
             a    = document.createElement('a');
         a.href     = url;
-        a.download = `${encFile.name}.enc`;
+        a.download = 'EncryptedBundle.enc';
         a.click();
         URL.revokeObjectURL(url);
-        statE.textContent = '✅ Encryption complete';
+        statE.textContent = '✅ Files encrypted and bundled.';
     } catch (err) {
         statE.textContent = 'Error: ' + err.message;
         console.error(err);
     } finally {
         loadE.style.display = 'none';
-    }
-});
-
-// ── DECRYPT FLOW ──────────────────────────────────────────────
-let decFile;
-const btnD   = document.getElementById('goDecrypt'),
-    loadD  = document.getElementById('loadingBarDecrypt'),
-    statD  = document.getElementById('statusTextDecrypt'),
-    infoD  = document.getElementById('fileInfoDecrypt');
-
-setupDropZone('dropZoneDecrypt','fileDecrypt', file => {
-    decFile = file;
-    infoD.textContent = `${file.name} — ${(file.size/1024).toFixed(1)} KB`;
-    btnD.disabled     = false;
-    statD.textContent = '';
-});
-
-btnD.addEventListener('click', async () => {
-    statD.textContent = '';
-    loadD.classList.remove('hidden');
-    loadD.style.display = 'block';
-
-    try {
-        const fd  = new FormData();
-        fd.append('file', decFile);
-        const res = await fetch('/decrypt', { method:'POST', body:fd });
-        if (!res.ok) throw new Error(res.statusText);
-        const blob = await res.blob(),
-            cd   = res.headers.get('Content-Disposition');
-        let filename = decFile.name.replace(/\.enc$/i, '');
-        if (cd) {
-            const m = cd.match(/filename="([^"]+)"/);
-            if (m) filename = m[1];
-        }
-        const url = URL.createObjectURL(blob),
-            a   = document.createElement('a');
-        a.href     = url;
-        a.download = filename;
-        a.click();
-        URL.revokeObjectURL(url);
-        statD.textContent = '✅ Decryption complete';
-    } catch (err) {
-        statD.textContent = 'Error: ' + err.message;
-        console.error(err);
-    } finally {
-        loadD.style.display = 'none';
-    }
-});
-
-// ── COMPARISON FLOW ──────────────────────────────────────────────
-let cmpFile;
-const btnC   = document.getElementById('goCompare'),
-    loadC  = document.getElementById('loadingBarCompare'),
-    statC  = document.getElementById('statusTextCompare'),
-    infoC  = document.getElementById('fileInfoCompare'),
-    tbl    = document.getElementById('compareTable'),
-    xorEnc = document.getElementById('xorEnc'),
-    xorDec = document.getElementById('xorDec'),
-    xorTot = document.getElementById('xorTotal'),
-    rsaKey = document.getElementById('rsaKeygen'),
-    rsaEnc = document.getElementById('rsaEnc'),
-    rsaDec = document.getElementById('rsaDec'),
-    rsaTot = document.getElementById('rsaTotal');
-
-setupDropZone('dropZoneCompare','fileCompare', file => {
-    cmpFile = file;
-    infoC.textContent = `${file.name} — ${(file.size/1024).toFixed(1)} KB`;
-    btnC.disabled     = false;
-    statC.textContent = '';
-    tbl.classList.add('hidden');
-});
-
-btnC.addEventListener('click', async () => {
-    btnC.disabled     = true;
-    statC.textContent = '';
-    loadC.classList.remove('hidden');
-    loadC.style.display = 'block';
-
-    try {
-        const fd  = new FormData();
-        fd.append('file', cmpFile);
-        const res = await fetch('/compare', { method:'POST', body:fd });
-        if (!res.ok) throw new Error(res.statusText);
-        const {
-            xorEncMs, xorDecMs,
-            aesrsaKeygenMs, aesrsaEncMs, aesrsaDecMs
-        } = await res.json();
-
-        const xorTotal = xorEncMs + xorDecMs;
-        const rsaTotal = aesrsaKeygenMs + aesrsaEncMs + aesrsaDecMs;
-
-        xorEnc.textContent = xorEncMs.toFixed(1);
-        xorDec.textContent = xorDecMs.toFixed(1);
-        xorTot.textContent = xorTotal.toFixed(1);
-
-        rsaKey.textContent = aesrsaKeygenMs.toFixed(1);
-        rsaEnc.textContent = aesrsaEncMs.toFixed(1);
-        rsaDec.textContent = aesrsaDecMs.toFixed(1);
-        rsaTot.textContent = rsaTotal.toFixed(1);
-
-        tbl.classList.remove('hidden');
-    } catch (err) {
-        statC.textContent = 'Error: ' + err.message;
-        console.error(err);
-    } finally {
-        loadC.style.display = 'none';
-        btnC.disabled       = false;
     }
 });

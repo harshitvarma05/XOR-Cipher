@@ -4,31 +4,39 @@
     <meta charset="UTF-8" />
     <title>Secure File Encryptor</title>
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <link rel="stylesheet" href="style.css" />
+
+    <script>
+        document.documentElement.setAttribute(
+            'data-theme',
+            localStorage.getItem('theme') || 'light'
+        );
+    </script>
+
+    <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
 <header>
     <h1>Secure File Encryptor</h1>
     <nav class="tabs" role="tablist">
-        <button id="tab-encrypt" class="tab-btn active"   data-tab="encrypt" aria-selected="true">Encrypt</button>
-        <button id="tab-decrypt" class="tab-btn"          data-tab="decrypt" aria-selected="false">Decrypt</button>
-        <button id="tab-compare" class="tab-btn"          data-tab="compare" aria-selected="false">Compare</button>
-        <button id="tab-about"   class="tab-btn"          data-tab="about"   aria-selected="false">About</button>
+        <button class="tab-btn active" data-tab="encrypt" aria-selected="true">Encrypt</button>
+        <button class="tab-btn"       data-tab="decrypt" aria-selected="false">Decrypt</button>
+        <button class="tab-btn"       data-tab="compare" aria-selected="false">Compare</button>
+        <button class="tab-btn"       data-tab="about"   aria-selected="false">About</button>
     </nav>
-    <button id="themeToggle" class="theme-toggle" title="Toggle Theme">🌙</button>
+    <button id="themeToggle" class="theme-toggle">🌙</button>
 </header>
 
 <main>
     <!-- Encrypt Panel -->
     <section id="encrypt" class="panel active" role="tabpanel" aria-labelledby="tab-encrypt">
         <div id="dropZoneEncrypt" class="drop-zone">
-            <p>Drag & drop or click to select file</p>
-            <input type="file" id="fileEncrypt" />
+            <p>Drag & drop or click to select files</p>
+            <input type="file" id="fileEncrypt" multiple />
         </div>
-        <div id="fileInfoEncrypt" class="file-info">No file selected</div>
+        <div id="fileInfoEncrypt" class="file-info">No files selected</div>
         <div id="questionHeader" class="question-header hidden"></div>
         <div id="questions" class="questions"></div>
-        <button id="goEncrypt" class="action-btn" disabled>Encrypt &amp; Download</button>
+        <button id="goEncrypt" class="action-btn" disabled>Encrypt Files &amp; Download</button>
         <div id="loadingBarEncrypt" class="loading-bar hidden"></div>
         <div class="status"><span id="statusTextEncrypt"></span></div>
     </section>
@@ -133,6 +141,6 @@
     </section>
 </main>
 
-<script src="script.js"></script>
+<script src="/static/script.js"></script>
 </body>
 </html>

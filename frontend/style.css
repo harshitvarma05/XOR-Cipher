@@ -297,3 +297,38 @@ main {
     .tab-btn { padding: 6px 12px; margin: 0 2px; }
     .drop-zone { height: 60px; }
 }
+.login-container {
+    width: 90%;
+    max-width: 360px;
+    margin: 120px auto;
+    padding: var(--space);
+    background: var(--bg-panel);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 24px var(--shadow);
+    text-align: center;
+}
+.login-container h2 {
+    margin-bottom: var(--space);
+    font-weight: 600;
+}
+.login-container form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space);
+}
+.login-container label {
+    text-align: left;
+    font-size: .9rem;
+    color: var(--text);
+}
+.login-container input {
+    padding: 8px 12px;
+    border: 1px solid var(--gray);
+    border-radius: var(--radius);
+    font-size: 1rem;
+}
+.login-container .error {
+    color: #ff3b30;
+    font-size: .85rem;
+    margin-top: var(--space);
+}

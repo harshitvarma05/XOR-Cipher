@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Login – Secure File Encryptor</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+    <script>
+        document.documentElement.setAttribute(
+            'data-theme',
+            localStorage.getItem('theme') || 'light'
+        );
+    </script>
+
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<div class="login-container">
+    <h2>Secure File Encryptor</h2>
+    <form method="POST" action="/login">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" required />
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required />
+
+        <button type="submit" class="action-btn">Log In</button>
+    </form>
+    <p class="error hidden">Invalid username or password.</p>
+</div>
+
+<script>
+    if (new URLSearchParams(location.search).has('error')) {
+        document.querySelector('.error').classList.remove('hidden');
+    }
+</script>
+</body>
+</html>
